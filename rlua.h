@@ -126,7 +126,6 @@ RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
 #define LuaPush_SpriteFont(L, sf) LuaPushOpaqueTypeWithMetatable(L, sf, SpriteFont)
 #define LuaPush_Mesh(L, vd) LuaPushOpaqueType(L, vd)
 #define LuaPush_Shader(L, s) LuaPushOpaqueType(L, s)
-#define LuaPush_Light(L, light) LuaPushOpaqueTypeWithMetatable(L, light, Light)
 #define LuaPush_Sound(L, snd) LuaPushOpaqueType(L, snd)
 #define LuaPush_Wave(L, wav) LuaPushOpaqueType(L, wav)
 #define LuaPush_Music(L, mus) LuaPushOpaqueType(L, mus)
@@ -146,7 +145,6 @@ RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
 #define LuaGetArgument_SpriteFont(L, sf) *(SpriteFont*)LuaGetArgumentOpaqueTypeWithMetatable(L, sf, "SpriteFont")
 #define LuaGetArgument_Mesh(L, vd) *(Mesh*)LuaGetArgumentOpaqueType(L, vd)
 #define LuaGetArgument_Shader(L, s) *(Shader*)LuaGetArgumentOpaqueType(L, s)
-#define LuaGetArgument_Light(L, light) *(Light*)LuaGetArgumentOpaqueType(L, light)
 #define LuaGetArgument_Sound(L, snd) *(Sound*)LuaGetArgumentOpaqueType(L, snd)
 #define LuaGetArgument_Wave(L, wav) *(Wave*)LuaGetArgumentOpaqueType(L, wav)
 #define LuaGetArgument_Music(L, mus) *(Music*)LuaGetArgumentOpaqueType(L, mus)
@@ -289,8 +287,8 @@ static int LuaIndexSpriteFont(lua_State* L)
 {
     SpriteFont img = LuaGetArgument_SpriteFont(L, 1);
     const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "size"))
-        lua_pushinteger(L, img.size);
+    if (!strcmp(key, "baseSize"))
+        lua_pushinteger(L, img.baseSize);
     else if (!strcmp(key, "texture"))
         LuaPush_Texture2D(L, img.texture);
     else if (!strcmp(key, "charsCount"))
@@ -298,58 +296,6 @@ static int LuaIndexSpriteFont(lua_State* L)
     else
         return 0;
     return 1;
-}
-
-static int LuaIndexLight(lua_State* L)
-{
-    Light light = LuaGetArgument_Light(L, 1);
-    const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "id"))
-        lua_pushinteger(L, light->id);
-    else if (!strcmp(key, "enabled"))
-        lua_pushboolean(L, light->enabled);
-    else if (!strcmp(key, "type"))
-        lua_pushinteger(L, light->type);
-    else if (!strcmp(key, "position"))
-        LuaPush_Vector3(L, light->position);
-    else if (!strcmp(key, "target"))
-        LuaPush_Vector3(L, light->target);
-    else if (!strcmp(key, "radius"))
-        lua_pushnumber(L, light->radius);
-    else if (!strcmp(key, "diffuse"))
-        LuaPush_Color(L, light->diffuse);
-    else if (!strcmp(key, "intensity"))
-        lua_pushnumber(L, light->intensity);
-    else if (!strcmp(key, "coneAngle"))
-        lua_pushnumber(L, light->coneAngle);
-    else
-        return 0;
-    return 1;
-}
-
-static int LuaNewIndexLight(lua_State* L)
-{
-    Light light = LuaGetArgument_Light(L, 1);
-    const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "id"))
-        light->id = LuaGetArgument_int(L, 3);
-    else if (!strcmp(key, "enabled"))
-        light->enabled = lua_toboolean(L, 3);
-    else if (!strcmp(key, "type"))
-        light->type = LuaGetArgument_int(L, 3);
-        else if (!strcmp(key, "position"))
-        light->position = LuaGetArgument_Vector3(L, 3);
-        else if (!strcmp(key, "target"))
-        light->target = LuaGetArgument_Vector3(L, 3);
-        else if (!strcmp(key, "radius"))
-        light->radius = LuaGetArgument_float(L, 3);
-        else if (!strcmp(key, "diffuse"))
-        light->diffuse = LuaGetArgument_Color(L, 3);
-        else if (!strcmp(key, "intensity"))
-        light->intensity = LuaGetArgument_float(L, 3);
-        else if (!strcmp(key, "coneAngle"))
-        light->coneAngle = LuaGetArgument_float(L, 3);
-    return 0;
 }
 
 static void LuaBuildOpaqueMetatables(void)
@@ -369,17 +315,10 @@ static void LuaBuildOpaqueMetatables(void)
     lua_setfield(L, -2, "__index");
     lua_pop(L, 1);
 
-        luaL_newmetatable(L, "SpriteFont");
-        lua_pushcfunction(L, &LuaIndexSpriteFont);
-        lua_setfield(L, -2, "__index");
-        lua_pop(L, 1);
-
-        luaL_newmetatable(L, "Light");
-        lua_pushcfunction(L, &LuaIndexLight);
-        lua_setfield(L, -2, "__index");
-        lua_pushcfunction(L, &LuaNewIndexLight);
-        lua_setfield(L, -2, "__newindex");
-        lua_pop(L, 1);
+    luaL_newmetatable(L, "SpriteFont");
+    lua_pushcfunction(L, &LuaIndexSpriteFont);
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
 }
 
 //----------------------------------------------------------------------------------
@@ -1809,39 +1748,10 @@ int lua_LoadImageRaw(lua_State* L)
     return 1;
 }
 
-int lua_LoadImageFromRES(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    int arg2 = LuaGetArgument_int(L, 2);
-    Image result = LoadImageFromRES(arg1, arg2);
-    LuaPush_Image(L, result);
-    return 1;
-}
-
 int lua_LoadTexture(lua_State* L)
 {
     const char * arg1 = LuaGetArgument_string(L, 1);
     Texture2D result = LoadTexture(arg1);
-    LuaPush_Texture2D(L, result);
-    return 1;
-}
-
-int lua_LoadTextureEx(lua_State* L)
-{
-    void * arg1 = (char *)LuaGetArgument_string(L, 1);  // NOTE: getting argument as string?
-    int arg2 = LuaGetArgument_int(L, 2);
-    int arg3 = LuaGetArgument_int(L, 3);
-    int arg4 = LuaGetArgument_int(L, 4);
-    Texture2D result = LoadTextureEx(arg1, arg2, arg3, arg4);
-    LuaPush_Texture2D(L, result);
-    return 1;
-}
-
-int lua_LoadTextureFromRES(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    int arg2 = LuaGetArgument_int(L, 2);
-    Texture2D result = LoadTextureFromRES(arg1, arg2);
     LuaPush_Texture2D(L, result);
     return 1;
 }
@@ -2423,13 +2333,6 @@ int lua_DrawGizmo(lua_State* L)
     return 0;
 }
 
-int lua_DrawLight(lua_State* L)
-{
-    Light arg1 = LuaGetArgument_Light(L, 1);
-    DrawLight(arg1);
-    return 0;
-}
-
 //------------------------------------------------------------------------------------
 // raylib [models] module functions
 //------------------------------------------------------------------------------------
@@ -2437,24 +2340,6 @@ int lua_LoadModel(lua_State* L)
 {
     const char * arg1 = LuaGetArgument_string(L, 1);
     Model result = LoadModel(arg1);
-    LuaPush_Model(L, result);
-    return 1;
-}
-
-int lua_LoadModelEx(lua_State* L)
-{
-    Mesh arg1 = LuaGetArgument_Mesh(L, 1);
-    bool arg2 = LuaGetArgument_int(L, 2);
-    Model result = LoadModelEx(arg1, arg2);
-    LuaPush_Model(L, result);
-    return 1;
-}
-
-int lua_LoadModelFromRES(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    int arg2 = LuaGetArgument_int(L, 2);
-    Model result = LoadModelFromRES(arg1, arg2);
     LuaPush_Model(L, result);
     return 1;
 }
@@ -2496,13 +2381,6 @@ int lua_LoadMaterial(lua_State* L)
 int lua_LoadDefaultMaterial(lua_State* L)
 {
     Material result = LoadDefaultMaterial();
-    LuaPush_Material(L, result);
-    return 1;
-}
-
-int lua_LoadStandardMaterial(lua_State* L)
-{
-    Material result = LoadStandardMaterial();
     LuaPush_Material(L, result);
     return 1;
 }
@@ -2676,13 +2554,6 @@ int lua_GetDefaultShader(lua_State* L)
     return 1;
 }
 
-int lua_GetStandardShader(lua_State* L)
-{
-    Shader result = GetStandardShader();
-    LuaPush_Shader(L, result);
-    return 1;
-}
-
 int lua_GetDefaultTexture(lua_State* L)
 {
     Texture2D result = GetDefaultTexture();
@@ -2767,24 +2638,6 @@ int lua_EndBlendMode(lua_State* L)
     EndBlendMode();
     return 0;
 }
-
-int lua_CreateLight(lua_State* L)
-{
-    int arg1 = LuaGetArgument_int(L, 1);
-    Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
-    Color arg3 = LuaGetArgument_Color(L, 3);
-    Light result = CreateLight(arg1, arg2, arg3);
-    LuaPush_Light(L, result);
-    return 1;
-}
-
-int lua_DestroyLight(lua_State* L)
-{
-    Light arg1 = LuaGetArgument_Light(L, 1);
-    DestroyLight(arg1);
-    return 0;
-}
-
 
 //------------------------------------------------------------------------------------
 // raylib [rlgl] module functions - VR experience
@@ -2886,15 +2739,6 @@ int lua_LoadSoundFromWave(lua_State* L)
 {
     Wave arg1 = LuaGetArgument_Wave(L, 1);
     Sound result = LoadSoundFromWave(arg1);
-    LuaPush_Sound(L, result);
-    return 1;
-}
-
-int lua_LoadSoundFromRES(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    int arg2 = LuaGetArgument_int(L, 2);
-    Sound result = LoadSoundFromRES(arg1, arg2);
     LuaPush_Sound(L, result);
     return 1;
 }
@@ -3172,35 +3016,26 @@ int lua_ResumeAudioStream(lua_State* L)
 //----------------------------------------------------------------------------------
 // raylib [utils] module functions
 //----------------------------------------------------------------------------------
-int lua_DecompressData(lua_State* L)
-{
-    unsigned char *arg1 = (unsigned char *)LuaGetArgument_string(L, 1);
-    unsigned arg2 = (unsigned)LuaGetArgument_int(L, 2);
-    int arg3 = LuaGetArgument_int(L, 3);
-    unsigned char *result = DecompressData(arg1, arg2, arg3);
-    lua_pushlstring(L, (const char *)result, arg3);
-    return 1;
-}
-
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-int lua_WriteBitmap(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    unsigned char* arg2 = (unsigned char*)LuaGetArgument_string(L, 2);
-    int arg3 = LuaGetArgument_int(L, 3);
-    int arg4 = LuaGetArgument_int(L, 4);
-    WriteBitmap(arg1, arg2, arg3, arg4);
-    return 0;
-}
-
-int lua_WritePNG(lua_State* L)
+int lua_SaveBMP(lua_State* L)
 {
     const char * arg1 = LuaGetArgument_string(L, 1);
     unsigned char* arg2 = (unsigned char*)LuaGetArgument_string(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
     int arg5 = LuaGetArgument_int(L, 5);
-    WritePNG(arg1, arg2, arg3, arg4, arg5);
+    SaveBMP(arg1, arg2, arg3, arg4, arg5);
+    return 0;
+}
+
+int lua_SavePNG(lua_State* L)
+{
+    const char * arg1 = LuaGetArgument_string(L, 1);
+    unsigned char* arg2 = (unsigned char*)LuaGetArgument_string(L, 2);
+    int arg3 = LuaGetArgument_int(L, 3);
+    int arg4 = LuaGetArgument_int(L, 4);
+    int arg5 = LuaGetArgument_int(L, 5);
+    SavePNG(arg1, arg2, arg3, arg4, arg5);
     return 0;
 }
 #endif
@@ -3775,10 +3610,7 @@ static luaL_Reg raylib_functions[] = {
     REG(LoadImage)
     REG(LoadImageEx)
     REG(LoadImageRaw)
-    REG(LoadImageFromRES)
     REG(LoadTexture)
-    REG(LoadTextureEx)
-    REG(LoadTextureFromRES)
     REG(LoadTextureFromImage)
     REG(LoadRenderTexture)
     REG(UnloadImage)
@@ -3841,17 +3673,13 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawRay)
     REG(DrawGrid)
     REG(DrawGizmo)
-    REG(DrawLight)
 
     REG(LoadModel)
-    REG(LoadModelEx)
-    REG(LoadModelFromRES)
     REG(LoadHeightmap)
     REG(LoadCubicmap)
     REG(UnloadModel)
     REG(LoadMaterial)
     REG(LoadDefaultMaterial)
-    REG(LoadStandardMaterial)
     REG(UnloadMaterial)
     //REG(GenMesh*)     // Not ready yet...
 
@@ -3872,7 +3700,6 @@ static luaL_Reg raylib_functions[] = {
     REG(LoadShader)
     REG(UnloadShader)
     REG(GetDefaultShader)
-    REG(GetStandardShader)
     REG(GetDefaultTexture)
     REG(GetShaderLocation)
     REG(SetShaderValue)
@@ -3884,8 +3711,6 @@ static luaL_Reg raylib_functions[] = {
     REG(EndShaderMode)
     REG(BeginBlendMode)
     REG(EndBlendMode)
-    REG(CreateLight)
-    REG(DestroyLight)
 
     REG(InitVrDevice)
     REG(CloseVrDevice)
@@ -3901,7 +3726,6 @@ static luaL_Reg raylib_functions[] = {
     REG(LoadWaveEx)
     REG(LoadSound)
     REG(LoadSoundFromWave)
-    REG(LoadSoundFromRES)
     REG(UpdateSound)
     REG(UnloadWave)
     REG(UnloadSound)
@@ -3940,10 +3764,9 @@ static luaL_Reg raylib_functions[] = {
     REG(StopAudioStream)
 
     /// Math and util
-    REG(DecompressData)
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-    REG(WriteBitmap)
-    REG(WritePNG)
+    REG(SaveBMP)
+    REG(SavePNG)
 #endif
     REG(TraceLog)
     REG(GetExtension)
@@ -4204,12 +4027,6 @@ RLUADEF void InitLuaDevice(void)
     LuaSetEnum("ADDITIVE", BLEND_ADDITIVE);
     LuaSetEnum("MULTIPLIED", BLEND_MULTIPLIED);
     LuaEndEnum("BlendMode");
-
-    LuaStartEnum();
-    LuaSetEnum("POINT", LIGHT_POINT);
-    LuaSetEnum("DIRECTIONAL", LIGHT_DIRECTIONAL);
-    LuaSetEnum("SPOT", LIGHT_SPOT);
-    LuaEndEnum("LightType");
     
     LuaStartEnum();
     LuaSetEnum("POINT", FILTER_POINT);
