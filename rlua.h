@@ -1,14 +1,15 @@
 /**********************************************************************************************
 *
-*   rlua 1.6 - raylib Lua bindings
+*   rlua v1.7 - raylib Lua bindings for raylib v1.7
 *
-*   NOTE 01:
+*   NOTES:
+*
 *   The following types:
 *       Color, Vector2, Vector3, Rectangle, Ray, Camera, Camera2D
 *   are treated as objects with named fields, same as in C.
+*   Lua defines utility functions to create those objects.
 *
-*   Lua defines utility functions for creating those objects.
-*   Usage:
+*   Usage example:
 *       local cl = Color(255,255,255,255)
 *       local rec = Rectangle(10, 10, 100, 100)
 *       local ray = Ray(Vector3(20, 20, 20), Vector3(50, 50, 50))
@@ -18,40 +19,35 @@
 *       Image, Texture2D, RenderTexture2D, SpriteFont
 *   are immutable, and you can only read their non-pointer arguments (e.g. sprfnt.baseSize).
 *
-*   All other object types are opaque, that is, you cannot access or
-*   change their fields directly.
+*   All other object types are opaque, that is, you cannot access or change their fields directly.
 *
 *   Remember that ALL raylib types have REFERENCE SEMANTICS in Lua.
 *   There is currently no way to create a copy of an opaque object.
 *
-*   NOTE 02:
 *   Some raylib functions take a pointer to an array, and the size of that array.
 *   The equivalent Lua functions take only an array table of the specified type UNLESS
 *   it's a pointer to a large char array (e.g. for images), then it takes (and potentially returns)
 *   a Lua string (without the size argument, as Lua strings are sized by default).
 *
-*   NOTE 03:
-*   Some raylib functions take pointers to objects to modify (e.g. ImageToPOT, etc.)
+*   Some raylib functions take pointers to objects to modify (e.g. ImageToPOT(), etc.)
 *   In Lua, these functions take values and return a new changed value, instead.
+*
 *   So, in C:
-*       ImageToPOT(&img, BLACK);
+*       ImageToPOT(&image, BLACK);
 *   In Lua becomes:
-*       img = ImageToPOT(img, BLACK)
+*       image = ImageToPOT(image, BLACK)
 *
-*   Remember that functions can return multiple values, so:
-*       UpdateCameraPlayer(&cam, &playerPos);
-*       Vector3 vec = ResolveCollisionCubicmap(img, mapPos, &playerPos, 5.0);
-*   becomes:
-*       cam, playerPos = UpdateCameraPlayer(cam, playerPos)
-*       vec, playerPos = ResolveCollisionCubicmap(img, mapPos, playerPos, 5)
-*
+*   Remember that Lua functions can return multiple values.
 *   This is to preserve value semantics of raylib objects.
 *
+*   CONTRIBUTORS:
+*       Ghassan Al-Mashareqa (ghassan@ghassan.pl): Original binding creation (for raylib 1.3)
+*       Ramon Santamaria (@raysan5): Review, update and maintenance
 *
-*   This Lua binding for raylib was originally created by Ghassan Al-Mashareqa (ghassan@ghassan.pl)
-*   for raylib 1.3 and later on reviewed and updated to raylib 1.6 by Ramon Santamaria.
 *
-*   Copyright (c) 2015-2016 Ghassan Al-Mashareqa and Ramon Santamaria (@raysan5)
+*   LICENSE: zlib/libpng
+*
+*   Copyright (c) 2015-2017 Ghassan Al-Mashareqa and Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -1291,33 +1287,6 @@ int lua_GetTouchPosition(lua_State* L)
     LuaPush_Vector2(L, result);
     return 1;
 }
-
-
-#if defined(PLATFORM_ANDROID)
-int lua_IsButtonPressed(lua_State* L)
-{
-    int arg1 = LuaGetArgument_int(L, 1);
-    bool result = IsButtonPressed(arg1);
-    lua_pushboolean(L, result);
-    return 1;
-}
-
-int lua_IsButtonDown(lua_State* L)
-{
-    int arg1 = LuaGetArgument_int(L, 1);
-    bool result = IsButtonDown(arg1);
-    lua_pushboolean(L, result);
-    return 1;
-}
-
-int lua_IsButtonReleased(lua_State* L)
-{
-    int arg1 = LuaGetArgument_int(L, 1);
-    bool result = IsButtonReleased(arg1);
-    lua_pushboolean(L, result);
-    return 1;
-}
-#endif
 
 //------------------------------------------------------------------------------------
 // raylib [gestures] module functions - Gestures and Touch Handling
@@ -3059,14 +3028,6 @@ int lua_TraceLog(lua_State* L)
     return 0;
 }
 
-int lua_GetExtension(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    const char* result = GetExtension(arg1);
-    lua_pushstring(L, result);
-    return 1;
-}
-
 //----------------------------------------------------------------------------------
 // raylib [raymath] module functions - Vector3 math
 //----------------------------------------------------------------------------------
@@ -3474,6 +3435,9 @@ static luaL_Reg raylib_functions[] = {
     //REG(Material)
 
     // Register functions
+    //--------------------
+    
+    // [core] module functions
     REG(InitWindow)
     REG(CloseWindow)
     REG(WindowShouldClose)
@@ -3557,12 +3521,7 @@ static luaL_Reg raylib_functions[] = {
     REG(GetTouchY)
     REG(GetTouchPosition)
 
-#if defined(PLATFORM_ANDROID)
-    REG(IsButtonPressed)
-    REG(IsButtonDown)
-    REG(IsButtonReleased)
-#endif
-
+    // [gestures] module functions
     REG(SetGesturesEnabled)
     REG(IsGestureDetected)
     REG(GetGestureDetected)
@@ -3573,6 +3532,7 @@ static luaL_Reg raylib_functions[] = {
     REG(GetGesturePinchVector)
     REG(GetGesturePinchAngle)
 
+    // [camera] module functions
     REG(SetCameraMode)
     REG(UpdateCamera)
     REG(SetCameraPanControl)
@@ -3580,6 +3540,7 @@ static luaL_Reg raylib_functions[] = {
     REG(SetCameraSmoothZoomControl)
     REG(SetCameraMoveControls)
 
+    // [shapes] module functions
     REG(DrawPixel)
     REG(DrawPixelV)
     REG(DrawLine)
@@ -3607,6 +3568,7 @@ static luaL_Reg raylib_functions[] = {
     REG(CheckCollisionPointCircle)
     REG(CheckCollisionPointTriangle)
 
+    // [textures] module functions
     REG(LoadImage)
     REG(LoadImageEx)
     REG(LoadImageRaw)
@@ -3648,6 +3610,7 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawTextureRec)
     REG(DrawTexturePro)
 
+    // [text] module functions
     REG(GetDefaultFont)
     REG(LoadSpriteFont)
     REG(LoadSpriteFontTTF)
@@ -3658,6 +3621,7 @@ static luaL_Reg raylib_functions[] = {
     REG(MeasureTextEx)
     REG(DrawFPS)
 
+    // [models] module functions
     REG(DrawLine3D)
     REG(DrawCircle3D)
     REG(DrawCube)
@@ -3681,7 +3645,6 @@ static luaL_Reg raylib_functions[] = {
     REG(LoadMaterial)
     REG(LoadDefaultMaterial)
     REG(UnloadMaterial)
-    //REG(GenMesh*)     // Not ready yet...
 
     REG(DrawModel)
     REG(DrawModelEx)
@@ -3697,6 +3660,7 @@ static luaL_Reg raylib_functions[] = {
     REG(CheckCollisionRaySphereEx)
     REG(CheckCollisionRayBox)
 
+    // [rlgl] module functions
     REG(LoadShader)
     REG(UnloadShader)
     REG(GetDefaultShader)
@@ -3719,6 +3683,7 @@ static luaL_Reg raylib_functions[] = {
     REG(UpdateVrTracking)
     REG(ToggleVrMode)
 
+    // [audio] module functions
     REG(InitAudioDevice)
     REG(CloseAudioDevice)
     REG(IsAudioDeviceReady)
@@ -3763,13 +3728,14 @@ static luaL_Reg raylib_functions[] = {
     REG(ResumeAudioStream)
     REG(StopAudioStream)
 
-    /// Math and util
+    // [utils] module functions
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
     REG(SaveBMP)
     REG(SavePNG)
 #endif
     REG(TraceLog)
-    REG(GetExtension)
+
+    // [raymath] module functions
     REG(VectorAdd)
     REG(VectorSubtract)
     REG(VectorCrossProduct)
