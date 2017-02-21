@@ -4,19 +4,17 @@
 *
 *   NOTES:
 *
-*   The following types:
-*       Color, Vector2, Vector3, Rectangle, Ray, Camera, Camera2D
+*   The following types:    Color, Vector2, Vector3, Rectangle, Ray, Camera, Camera2D
 *   are treated as objects with named fields, same as in C.
 *   Lua defines utility functions to create those objects.
 *
-*   Usage example:
+*   USAGE EXAMPLE:
 *       local cl = Color(255,255,255,255)
 *       local rec = Rectangle(10, 10, 100, 100)
 *       local ray = Ray(Vector3(20, 20, 20), Vector3(50, 50, 50))
 *       local x2 = rec.x + rec.width
 *
-*   The following types:
-*       Image, Texture2D, RenderTexture2D, SpriteFont
+*   The following types:    Image, Texture2D, RenderTexture2D, SpriteFont
 *   are immutable, and you can only read their non-pointer arguments (e.g. sprfnt.baseSize).
 *
 *   All other object types are opaque, that is, you cannot access or change their fields directly.
@@ -32,10 +30,8 @@
 *   Some raylib functions take pointers to objects to modify (e.g. ImageToPOT(), etc.)
 *   In Lua, these functions take values and return a new changed value, instead.
 *
-*   So, in C:
-*       ImageToPOT(&image, BLACK);
-*   In Lua becomes:
-*       image = ImageToPOT(image, BLACK)
+*   So, in C:           ImageToPOT(&image, BLACK);
+*   In Lua becomes:     image = ImageToPOT(image, BLACK)
 *
 *   Remember that Lua functions can return multiple values.
 *   This is to preserve value semantics of raylib objects.
