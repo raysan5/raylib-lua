@@ -1,18 +1,23 @@
 /*******************************************************************************************
 *
-*   rlua 1.0 - raylib Lua files launcher
+*   rlua v1.0 - raylib Lua launcher
 *
 *   DEPENDENCIES:
 *
 *   raylib 1.7 - This program uses latest raylib version (www.raylib.com)
-*   Lua 5.3.4 - http://luabinaries.sourceforge.net/download.html
+*   Lua 5.3.3  - http://luabinaries.sourceforge.net/download.html
 *
 *   COMPILATION (MinGW 5.3.0):
 *
-*   gcc -o rlua.exe rlua.c -s $(RAYLIB_DIR)\raylib_icon                     /
-*       -I../src -I../src/external/lua/include -L../src/external/lua/lib    /
-*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53      /
+*   gcc -o rlua.exe rlua.c -s rlua_icon -I. -Iexternal/lua/include -Lexternal/lua/lib  /
+*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53                 /
 *       -std=c99 -Wl,-allow-multiple-definition -Wl,--subsystem,windows
+*
+*   USAGE:
+*
+*   Just launch your raylib .lua file from command line:    rlua.exe core_basic_window.lua
+*   or drag&drop your .lua file over rlua.exe
+*
 *
 *   LICENSE: zlib/libpng
 *
@@ -35,17 +40,12 @@
 *
 ********************************************************************************************/
 
-#include "raylib.h"
+#include "raylib.h"             // raylib library
 
 #define RLUA_IMPLEMENTATION
-#include "rlua.h"
+#include "rlua.h"               // raylib Lua binding
 
 #include <string.h>             // Required for: strcmp()
-
-//----------------------------------------------------------------------------------
-// Module Functions Declaration
-//----------------------------------------------------------------------------------
-//static const char *GetExtension(const char *fileName);  // Get extension from filename
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -60,25 +60,11 @@ int main(int argc, char *argv[])
         {
             InitLuaDevice();            // Initialize lua device
             
-            ExecuteLuaFile(argv[1]);    // Execute lua program
+            ExecuteLuaFile(argv[1]);    // Execute lua program (argument file)
 
             CloseLuaDevice();           // Close Lua device and free resources
         }
     }
-    //--------------------------------------------------------------------------------------
 
     return 0;
 }
-
-//--------------------------------------------------------------------------------------------
-// Helper functions
-//--------------------------------------------------------------------------------------------
-/*
-// Get the extension for a filename
-static const char *GetExtension(const char *fileName)
-{
-    const char *dot = strrchr(fileName, '.');
-    if (!dot || dot == fileName) return "";
-    return (dot + 1);
-}
-*/
