@@ -9,8 +9,8 @@
 *
 *   COMPILATION (MinGW 5.3.0):
 *
-*   gcc -o rlua.exe rlua.c -s rlua_icon -I. -Iexternal/lua/include -Lexternal/lua/lib  /
-*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53                 /
+*   gcc -o rlua.exe rlua.c -s rlua_icon -I. -Iexternal/lua/include -Lexternal/lua/lib  \
+*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53                 \
 *       -std=c99 -Wl,-allow-multiple-definition -Wl,--subsystem,windows
 *
 *   USAGE:
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     {
         // TODO: Support additional arguments for lua file execution
         
-        if (strcmp(GetExtension(argv[1]), "lua") == 0)
+        if (IsFileExtension(argv[1], ".lua"))
         {
             InitLuaDevice();            // Initialize lua device
             

@@ -2607,29 +2607,22 @@ int lua_EndBlendMode(lua_State* L)
 //------------------------------------------------------------------------------------
 // raylib [rlgl] module functions - VR experience
 //------------------------------------------------------------------------------------
-int lua_InitVrDevice(lua_State* L)
+int lua_InitVrSimulator(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
-    InitVrDevice(arg1);
+    InitVrSimulator(arg1);
     return 0;
 }
 
-int lua_CloseVrDevice(lua_State* L)
+int lua_CloseVrSimulator(lua_State* L)
 {
-    CloseVrDevice();
+    CloseVrSimulator();
     return 0;
 }
 
-int lua_IsVrDeviceReady(lua_State* L)
+int lua_IsVrSimulatorReady(lua_State* L)
 {
-    bool result = IsVrDeviceReady();
-    lua_pushboolean(L, result);
-    return 1;
-}
-
-int lua_IsVrSimulator(lua_State* L)
-{
-    bool result = IsVrSimulator();
+    bool result = IsVrSimulatorReady();
     lua_pushboolean(L, result);
     return 1;
 }
@@ -2645,6 +2638,18 @@ int lua_UpdateVrTracking(lua_State* L)
 int lua_ToggleVrMode(lua_State* L)
 {
     ToggleVrMode();
+    return 0;
+}
+
+int lua_BeginVrDrawing(lua_State* L)
+{
+    BeginVrDrawing();
+    return 0;
+}
+
+int lua_EndVrDrawing(lua_State* L)
+{
+    EndVrDrawing();
     return 0;
 }
 
@@ -2982,17 +2987,6 @@ int lua_ResumeAudioStream(lua_State* L)
 // raylib [utils] module functions
 //----------------------------------------------------------------------------------
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-int lua_SaveBMP(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    unsigned char* arg2 = (unsigned char*)LuaGetArgument_string(L, 2);
-    int arg3 = LuaGetArgument_int(L, 3);
-    int arg4 = LuaGetArgument_int(L, 4);
-    int arg5 = LuaGetArgument_int(L, 5);
-    SaveBMP(arg1, arg2, arg3, arg4, arg5);
-    return 0;
-}
-
 int lua_SavePNG(lua_State* L)
 {
     const char * arg1 = LuaGetArgument_string(L, 1);
@@ -3672,12 +3666,13 @@ static luaL_Reg raylib_functions[] = {
     REG(BeginBlendMode)
     REG(EndBlendMode)
 
-    REG(InitVrDevice)
-    REG(CloseVrDevice)
-    REG(IsVrDeviceReady)
-    REG(IsVrSimulator)
+    REG(InitVrSimulator)
+    REG(CloseVrSimulator)
+    REG(IsVrSimulatorReady)
     REG(UpdateVrTracking)
     REG(ToggleVrMode)
+    REG(BeginVrDrawing)
+    REG(EndVrDrawing)
 
     // [audio] module functions
     REG(InitAudioDevice)
@@ -3726,7 +3721,6 @@ static luaL_Reg raylib_functions[] = {
 
     // [utils] module functions
 #if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-    REG(SaveBMP)
     REG(SavePNG)
 #endif
     REG(TraceLog)
