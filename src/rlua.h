@@ -2986,19 +2986,6 @@ int lua_ResumeAudioStream(lua_State* L)
 //----------------------------------------------------------------------------------
 // raylib [utils] module functions
 //----------------------------------------------------------------------------------
-#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-int lua_SavePNG(lua_State* L)
-{
-    const char * arg1 = LuaGetArgument_string(L, 1);
-    unsigned char* arg2 = (unsigned char*)LuaGetArgument_string(L, 2);
-    int arg3 = LuaGetArgument_int(L, 3);
-    int arg4 = LuaGetArgument_int(L, 4);
-    int arg5 = LuaGetArgument_int(L, 5);
-    SavePNG(arg1, arg2, arg3, arg4, arg5);
-    return 0;
-}
-#endif
-
 int lua_TraceLog(lua_State* L)
 {
     int num_args = lua_gettop(L) - 1;
@@ -3720,9 +3707,6 @@ static luaL_Reg raylib_functions[] = {
     REG(StopAudioStream)
 
     // [utils] module functions
-#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_RPI)
-    REG(SavePNG)
-#endif
     REG(TraceLog)
 
     // [raymath] module functions
