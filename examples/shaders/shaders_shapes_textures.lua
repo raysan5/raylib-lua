@@ -23,7 +23,7 @@ local screenHeight = 450
 
 InitWindow(screenWidth, screenHeight, "raylib [shaders] example - shapes and texture shaders")
 
-local sonic = LoadTexture("resources/fudesumi.png")
+local fudesumi = LoadTexture("resources/fudesumi.png")
 
 -- NOTE: Using GLSL 330 shader version, on OpenGL ES 2.0 use GLSL 100 shader version 
 local shader = LoadShader("resources/shaders/glsl330/base.vs", 

@@ -14,7 +14,7 @@
 local screenWidth = 800
 local screenHeight = 450
 
-SetConfigFlags(FLAG_MSAA_4X_HINT);
+SetConfigFlags(FLAG.MSAA_4X_HINT);
 InitWindow(screenWidth, screenHeight, "raylib [shapes] example - cubic-bezier lines")
 
 local startPoint = Vector2(0, 0)
@@ -27,8 +27,8 @@ SetTargetFPS(60)       -- Set target frames-per-second
 while not WindowShouldClose() do            -- Detect window close button or ESC key
     -- Update
     ---------------------------------------------------------------------------------------
-    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) then startPoint = GetMousePosition()
-    else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) then endPoint = GetMousePosition() end
+    if (IsMouseButtonDown(MOUSE.LEFT_BUTTON)) then startPoint = GetMousePosition()
+    elseif (IsMouseButtonDown(MOUSE.RIGHT_BUTTON)) then endPoint = GetMousePosition() end
     ---------------------------------------------------------------------------------------
 
     -- Draw

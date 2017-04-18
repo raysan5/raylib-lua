@@ -32,7 +32,7 @@ camera.fovy = 60.0                          -- Camera field-of-view Y
 
 local cubePosition = Vector3(0.0, 0.0, 0.0)
 
-SetCameraMode(camera, CAMERA_FIRST_PERSON); -- Set first person camera mode
+SetCameraMode(CAMERA_FIRST_PERSON); -- Set first person camera mode
 
 SetTargetFPS(90)                    -- Set our game to run at 90 frames-per-second
 ----------------------------------------------------------------------------------------

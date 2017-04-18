@@ -21,13 +21,13 @@ local msg = "TTF SpriteFont"
 -- NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
 
 -- TTF SpriteFont loading with custom generation parameters
-local font = LoadSpriteFontTTF("resources/fonts/KAISG.ttf", 96, 0, 0)
+local font = LoadSpriteFontTTF("resources/KAISG.ttf", 96, 0, 0)
 
 -- Generate mipmap levels to use trilinear filtering
 -- NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
 --font.texture = GenTextureMipmaps(font.texture) -- ISSUE: attempt to index a SpriteFont value (local 'font')
 
-local fontSize = font.size
+local fontSize = font.baseSize
 local fontPosition = Vector2(40, screenHeight/2 + 50)
 local textSize
 

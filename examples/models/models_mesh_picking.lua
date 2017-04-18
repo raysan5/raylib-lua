@@ -20,7 +20,7 @@ InitWindow(screenWidth, screenHeight, "raylib [models] example - 3d ray picking"
 -- Define the camera to look into our 3d world
 local camera = Camera(Vector3(10.0, 8.0, 10.0), Vector3(0.0, 2.3, 0.0), Vector3(0.0, 1.6, 0.0), 45.0)
 
-local Ray ray
+local ray = Ray()
 
 local tower = LoadModel("resources/tower.obj")      -- Load OBJ model
 local texture = LoadTexture("resources/tower.png")  -- Load model texture
@@ -50,8 +50,8 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
     camera = UpdateCamera(camera)           -- Update camera
         
     -- Display information about closest hit
-    RayHitInfo nearestHit
-    char *hitObjectName = "None"
+    local nearestHit = RayHitInfo()
+    local hitObjectName = "None"
     nearestHit.distance = 100000;           -- Very far distance...
     nearestHit.hit = false
     cursorColor = WHITE
@@ -60,18 +60,18 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
     ray = GetMouseRay(GetMousePosition(), camera)
     
     -- Check ray collision aginst ground plane
-    RayHitInfo groundHitInfo = GetCollisionRayGround(ray, 0.0f)
+    local groundHitInfo = GetCollisionRayGround(ray, 0.0)
     
-    if ((groundHitInfo.hit) && (groundHitInfo.distance < nearestHit.distance)) then
+    if ((groundHitInfo.hit) and (groundHitInfo.distance < nearestHit.distance)) then
         nearestHit = groundHitInfo
         cursorColor = GREEN
         hitObjectName = "Ground"
     end
 
     -- Check ray collision against test triangle
-    RayHitInfo triHitInfo = GetCollisionRayTriangle(ray, ta, tb, tc)
+    local triHitInfo = GetCollisionRayTriangle(ray, ta, tb, tc)
     
-    if ((triHitInfo.hit) && (triHitInfo.distance < nearestHit.distance)) then
+    if ((triHitInfo.hit) and (triHitInfo.distance < nearestHit.distance)) then
         nearestHit = triHitInfo
         cursorColor = PURPLE
         hitObjectName = "Triangle"
@@ -82,16 +82,16 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         hitTriangle = false
     end
 
-    RayHitInfo meshHitInfo
+    local meshHitInfo = RayHitInfo()
 
     -- Check ray collision against bounding box first, before trying the full ray-mesh test
     if (CheckCollisionRayBox(ray, towerBBox)) then
         hitMeshBBox = true
         
         -- Check ray collision against mesh
-        meshHitInfo = GetCollisionRayMesh(ray, &tower.mesh)    
+        meshHitInfo = GetCollisionRayMesh(ray, tower.mesh)    
         
-        if ((meshHitInfo.hit) && (meshHitInfo.distance < nearestHit.distance)) then
+        if ((meshHitInfo.hit) and (meshHitInfo.distance < nearestHit.distance)) then
             nearestHit = meshHitInfo
             cursorColor = ORANGE
             hitObjectName = "Mesh"
@@ -136,7 +136,7 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
 
             DrawRay(ray, MAROON)
             
-            DrawGrid(100, 1.0f)
+            DrawGrid(100, 1.0)
 
         End3dMode()
         
@@ -144,7 +144,7 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         DrawText(string.format("Hit Object: %s", hitObjectName), 10, 50, 10, BLACK)
 
         if (nearestHit.hit) then
-            int ypos = 70
+            local ypos = 70
 
             DrawText(string.format("Distance: %3.2f", nearestHit.distance), 10, ypos, 10, BLACK)
             DrawText(string.format("Hit Pos: %3.2f %3.2f %3.2f", 

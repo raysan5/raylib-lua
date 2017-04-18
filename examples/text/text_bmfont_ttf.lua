@@ -20,12 +20,12 @@ local msgBm = "THIS IS AN AngelCode SPRITE FONT"
 local msgTtf = "THIS FONT has been GENERATED from TTF"
 
 -- NOTE: Textures/Fonts MUST be loaded after Window initialization (OpenGL context is required)
-local fontBm = LoadSpriteFont("resources/fonts/bmfont.fnt")       -- BMFont (AngelCode)
-local fontTtf = LoadSpriteFont("resources/fonts/pixantiqua.ttf")  -- TTF font
+local fontBm = LoadSpriteFont("resources/bmfont.fnt")       -- BMFont (AngelCode)
+local fontTtf = LoadSpriteFont("resources/pixantiqua.ttf")  -- TTF font
 
 local fontPosition = Vector2(0, 0)
-fontPosition.x = screenWidth/2 - MeasureTextEx(fontBm, msgBm, fontBm.size, 0).x/2
-fontPosition.y = screenHeight/2 - fontBm.size/2 - 80
+fontPosition.x = screenWidth/2 - MeasureTextEx(fontBm, msgBm, fontBm.baseSize, 0).x/2
+fontPosition.y = screenHeight/2 - fontBm.baseSize/2 - 80
 
 SetTargetFPS(60)            -- Set target frames-per-second
 -------------------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
 
         ClearBackground(RAYWHITE)
 
-        DrawTextEx(fontBm, msgBm, fontPosition, fontBm.size, 0, MAROON)
-        DrawTextEx(fontTtf, msgTtf, Vector2(60.0, 240.0), fontTtf.size, 2, LIME)
+        DrawTextEx(fontBm, msgBm, fontPosition, fontBm.baseSize, 0, MAROON)
+        DrawTextEx(fontTtf, msgTtf, Vector2(60.0, 240.0), fontTtf.baseSize, 2, LIME)
 
     EndDrawing()
     ---------------------------------------------------------------------------------------
