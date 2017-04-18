@@ -162,6 +162,7 @@ static void LuaPush_Matrix(lua_State* L, Matrix *matrix);
 static void LuaPush_Rectangle(lua_State* L, Rectangle rect);
 static void LuaPush_Model(lua_State* L, Model mdl);
 static void LuaPush_Ray(lua_State* L, Ray ray);
+static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo hit);
 static void LuaPush_Camera(lua_State* L, Camera cam);
 
 static Vector2 LuaGetArgument_Vector2(lua_State* L, int index);
@@ -578,6 +579,19 @@ static void LuaPush_Ray(lua_State* L, Ray ray)
     lua_setfield(L, -2, "direction");
 }
 
+static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo hit)
+{
+    lua_createtable(L, 0, 4);
+    lua_pushinteger(L, hit.hit);
+    lua_setfield(L, -2, "hit");
+    lua_pushnumber(L, hit.distance);
+    lua_setfield(L, -2, "distance");
+    LuaPush_Vector3(L, hit.hitPosition);
+    lua_setfield(L, -2, "hitPosition");
+    LuaPush_Vector3(L, hit.hitNormal);
+    lua_setfield(L, -2, "hitNormal");
+}
+
 static void LuaPush_BoundingBox(lua_State* L, BoundingBox bb)
 {
     lua_createtable(L, 0, 2);
@@ -680,9 +694,19 @@ static int lua_Rectangle(lua_State* L)
 
 static int lua_Ray(lua_State* L)
 {
-    Vector2 pos = LuaGetArgument_Vector2(L, 1);
-    Vector2 dir = LuaGetArgument_Vector2(L, 2);
-    LuaPush_Ray(L, (Ray) { { pos.x, pos.y }, { dir.x, dir.y } });
+    Vector3 pos = LuaGetArgument_Vector3(L, 1);
+    Vector3 dir = LuaGetArgument_Vector3(L, 2);
+    LuaPush_Ray(L, (Ray) { { pos.x, pos.y, pos.z }, { dir.x, dir.y, dir.z } });
+    return 1;
+}
+
+static int lua_RayHitInfo(lua_State* L)
+{
+    int hit = LuaGetArgument_int(L, 1);
+    float dis = LuaGetArgument_float(L, 2);
+    Vector3 pos = LuaGetArgument_Vector3(L, 3);
+    Vector3 norm = LuaGetArgument_Vector3(L, 4);
+    LuaPush_RayHitInfo(L, (RayHitInfo) { hit, dis, { pos.x, pos.y, pos.z }, { norm.x, norm.y, norm.z } });
     return 1;
 }
 
@@ -1442,6 +1466,28 @@ int lua_DrawLineV(lua_State* L)
     DrawLineV(arg1, arg2, arg3);
     return 0;
 }
+
+// Draw a line defining thickness
+int lua_DrawLineEx(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    Color arg4 = LuaGetArgument_Color(L, 4);
+    DrawLineEx(arg1, arg2, arg3, arg4);
+    return 0;
+}
+
+// Draw a line using cubic-bezier curves in-out                       
+int lua_DrawLineBezier(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    Color arg4 = LuaGetArgument_Color(L, 4);
+    DrawLineBezier(arg1, arg2, arg3, arg4);
+    return 0;
+}              
 
 int lua_DrawCircle(lua_State* L)
 {
@@ -3406,6 +3452,7 @@ static luaL_Reg raylib_functions[] = {
     REG(Quaternion)
     REG(Rectangle)
     REG(Ray)
+    REG(RayHitInfo)
     REG(Camera)
     REG(Camera2D)
     REG(BoundingBox)
@@ -3420,6 +3467,9 @@ static luaL_Reg raylib_functions[] = {
     REG(WindowShouldClose)
     REG(IsWindowMinimized)
     REG(ToggleFullscreen)
+//RLAPI void SetWindowIcon(Image image);                            // Set icon for window (only PLATFORM_DESKTOP)
+//RLAPI void SetWindowPosition(int x, int y);                       // Set window position on screen (only PLATFORM_DESKTOP)
+//RLAPI void SetWindowMonitor(int monitor);                         // Set monitor for the current window (fullscreen mode)
     REG(GetScreenWidth)
     REG(GetScreenHeight)
 
@@ -3458,8 +3508,13 @@ static luaL_Reg raylib_functions[] = {
     REG(MatrixToFloat)
     REG(GetRandomValue)
     REG(Fade)
-    REG(SetConfigFlags)
+    
     REG(ShowLogo)
+    REG(SetConfigFlags)
+    REG(TraceLog)
+//RLAPI void TraceLog(int logType, const char *text, ...);          // Show trace log messages (INFO, WARNING, ERROR, DEBUG)
+//RLAPI void TakeScreenshot(void);                                  // Takes a screenshot and saves it in the same folder as executable
+//RLAPI bool IsFileExtension(const char *fileName, const char *ext);// Check file extension
 
     REG(IsFileDropped)
     REG(GetDroppedFiles)
@@ -3494,6 +3549,7 @@ static luaL_Reg raylib_functions[] = {
     REG(GetMousePosition)
     REG(SetMousePosition)
     REG(GetMouseWheelMove)
+    
     REG(GetTouchX)
     REG(GetTouchY)
     REG(GetTouchPosition)
@@ -3522,12 +3578,15 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawPixelV)
     REG(DrawLine)
     REG(DrawLineV)
+//RLAPI void DrawLineEx(Vector2 startPos, Vector2 endPos, float thick, Color color);                       // Draw a line defining thickness
+//RLAPI void DrawLineBezier(Vector2 startPos, Vector2 endPos, float thick, Color color);                   // Draw a line using cubic-bezier curves in-out
     REG(DrawCircle)
     REG(DrawCircleGradient)
     REG(DrawCircleV)
     REG(DrawCircleLines)
     REG(DrawRectangle)
     REG(DrawRectangleRec)
+//RLAPI void DrawRectanglePro(Rectangle rec, Vector2 origin, float rotation, Color color);                 // Draw a color-filled rectangle with pro parameters
     REG(DrawRectangleGradient)
     REG(DrawRectangleV)
     REG(DrawRectangleLines)
@@ -3548,6 +3607,7 @@ static luaL_Reg raylib_functions[] = {
     // [textures] module functions
     REG(LoadImage)
     REG(LoadImageEx)
+//RLAPI Image LoadImagePro(void *data, int width, int height, int format);                                 // Load image from raw data with parameters
     REG(LoadImageRaw)
     REG(LoadTexture)
     REG(LoadTextureFromImage)
@@ -3560,6 +3620,7 @@ static luaL_Reg raylib_functions[] = {
     REG(UpdateTexture)
     REG(ImageToPOT)
     REG(ImageFormat)
+//RLAPI void ImageAlphaMask(Image *image, Image alphaMask);                                                // Apply alpha mask to image
     REG(ImageDither)
     REG(ImageCopy)
     REG(ImageCrop)
@@ -3615,10 +3676,15 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawGrid)
     REG(DrawGizmo)
 
+//RLAPI Mesh LoadMesh(const char *fileName);                                                              // Load mesh from file
+//RLAPI Mesh LoadMeshEx(int numVertex, float *vData, float *vtData, float *vnData, Color *cData);         // Load mesh from vertex data
     REG(LoadModel)
+//RLAPI Model LoadModelFromMesh(Mesh data, bool dynamic);                                                 // Load model from mesh data
     REG(LoadHeightmap)
     REG(LoadCubicmap)
+//RLAPI void UnloadMesh(Mesh *mesh);                                                                      // Unload mesh from memory (RAM and/or VRAM)
     REG(UnloadModel)
+    
     REG(LoadMaterial)
     REG(LoadDefaultMaterial)
     REG(UnloadMaterial)
@@ -3626,6 +3692,7 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawModel)
     REG(DrawModelEx)
     REG(DrawModelWires)
+//RLAPI void DrawBoundingBox(BoundingBox box, Color color);                                               // Draw bounding box (wires)
     REG(DrawModelWiresEx)
     REG(DrawBillboard)
     REG(DrawBillboardRec)
@@ -3636,8 +3703,12 @@ static luaL_Reg raylib_functions[] = {
     REG(CheckCollisionRaySphere)
     REG(CheckCollisionRaySphereEx)
     REG(CheckCollisionRayBox)
+//RLAPI RayHitInfo GetCollisionRayMesh(Ray ray, Mesh *mesh);                                              // Get collision info between ray and mesh
+//RLAPI RayHitInfo GetCollisionRayTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3);                  // Get collision info between ray and triangle
+//RLAPI RayHitInfo GetCollisionRayGround(Ray ray, float groundHeight);                                    // Get collision info between ray and ground plane (Y-normal plane)
 
     // [rlgl] module functions
+//RLAPI char *LoadText(const char *fileName);                               // Load chars array from text file
     REG(LoadShader)
     REG(UnloadShader)
     REG(GetDefaultShader)
@@ -3665,6 +3736,8 @@ static luaL_Reg raylib_functions[] = {
     REG(InitAudioDevice)
     REG(CloseAudioDevice)
     REG(IsAudioDeviceReady)
+//RLAPI void SetMasterVolume(float volume);                             // Set master volume (listener)
+
     REG(LoadWave)
     REG(LoadWaveEx)
     REG(LoadSound)
@@ -3694,6 +3767,7 @@ static luaL_Reg raylib_functions[] = {
     REG(IsMusicPlaying)
     REG(SetMusicVolume)
     REG(SetMusicPitch)
+//RLAPI void SetMusicLoopCount(Music music, float count);               // Set music loop count (loop repeats)
     REG(GetMusicTimeLength)
     REG(GetMusicTimePlayed)
 
@@ -3706,24 +3780,37 @@ static luaL_Reg raylib_functions[] = {
     REG(ResumeAudioStream)
     REG(StopAudioStream)
 
-    // [utils] module functions
-    REG(TraceLog)
-
     // [raymath] module functions
+/*
+RMDEF float Clamp(float value, float min, float max) 
+RMDEF Vector2 Vector2Zero(void)
+RMDEF Vector2 Vector2One(void)
+RMDEF Vector2 Vector2Add(Vector2 v1, Vector2 v2)
+RMDEF Vector2 Vector2Subtract(Vector2 v1, Vector2 v2)
+RMDEF float Vector2Lenght(Vector2 v)
+RMDEF float Vector2DotProduct(Vector2 v1, Vector2 v2)
+RMDEF float Vector2Distance(Vector2 v1, Vector2 v2)
+RMDEF float Vector2Angle(Vector2 v1, Vector2 v2)
+RMDEF void Vector2Scale(Vector2 *v, float scale)
+RMDEF void Vector2Negate(Vector2 *v)
+RMDEF void Vector2Divide(Vector2 *v, float div)
+RMDEF void Vector2Normalize(Vector2 *v)
+*/
+    REG(VectorZero)
+    //REG(VectorOne)
     REG(VectorAdd)
     REG(VectorSubtract)
     REG(VectorCrossProduct)
     REG(VectorPerpendicular)
-    REG(VectorDotProduct)
     REG(VectorLength)
+    REG(VectorDotProduct)
+    REG(VectorDistance)
     REG(VectorScale)
     REG(VectorNegate)
     REG(VectorNormalize)
-    REG(VectorDistance)
+    REG(VectorTransform)
     REG(VectorLerp)
     REG(VectorReflect)
-    REG(VectorTransform)
-    REG(VectorZero)
     REG(MatrixDeterminant)
     REG(MatrixTrace)
     REG(MatrixTranspose)
@@ -3752,12 +3839,34 @@ static luaL_Reg raylib_functions[] = {
     REG(QuaternionFromAxisAngle)
     REG(QuaternionToAxisAngle)
     REG(QuaternionTransform)
+    
+    // [physac] module functions
+/*
+PHYSACDEF void InitPhysics(void);                                                                           // Initializes physics values, pointers and creates physics loop thread
+PHYSACDEF bool IsPhysicsEnabled(void);                                                                      // Returns true if physics thread is currently enabled
+PHYSACDEF void SetPhysicsGravity(float x, float y);                                                         // Sets physics global gravity force
+PHYSACDEF PhysicsBody CreatePhysicsBodyCircle(Vector2 pos, float radius, float density);                    // Creates a new circle physics body with generic parameters
+PHYSACDEF PhysicsBody CreatePhysicsBodyRectangle(Vector2 pos, float width, float height, float density);    // Creates a new rectangle physics body with generic parameters
+PHYSACDEF PhysicsBody CreatePhysicsBodyPolygon(Vector2 pos, float radius, int sides, float density);        // Creates a new polygon physics body with generic parameters
+PHYSACDEF void PhysicsAddForce(PhysicsBody body, Vector2 force);                                            // Adds a force to a physics body
+PHYSACDEF void PhysicsAddTorque(PhysicsBody body, float amount);                                            // Adds an angular force to a physics body
+PHYSACDEF void PhysicsShatter(PhysicsBody body, Vector2 position, float force);                             // Shatters a polygon shape physics body to little physics bodies with explosion force
+PHYSACDEF int GetPhysicsBodiesCount(void);                                                                  // Returns the current amount of created physics bodies
+PHYSACDEF PhysicsBody GetPhysicsBody(int index);                                                            // Returns a physics body of the bodies pool at a specific index
+PHYSACDEF int GetPhysicsShapeType(int index);                                                               // Returns the physics body shape type (PHYSICS_CIRCLE or PHYSICS_POLYGON)
+PHYSACDEF int GetPhysicsShapeVerticesCount(int index);                                                      // Returns the amount of vertices of a physics body shape
+PHYSACDEF Vector2 GetPhysicsShapeVertex(PhysicsBody body, int vertex);                                      // Returns transformed position of a body shape (body position + vertex transformed position)
+PHYSACDEF void SetPhysicsBodyRotation(PhysicsBody body, float radians);                                     // Sets physics body shape transform based on radians parameter
+PHYSACDEF void DestroyPhysicsBody(PhysicsBody body);                                                        // Unitializes and destroy a physics body
+PHYSACDEF void ResetPhysics(void);                                                                          // Destroys created physics bodies and manifolds and resets global values
+PHYSACDEF void ClosePhysics(void);                                                                          // Unitializes physics pointers and closes physics loop thread
+*/
 
     {NULL, NULL}  // sentinel: end signal
 };
 
-// Register raylib functionality
-static void LuaRegisterRayLib(const char *opt_table)
+// Register raylib Lua functionality
+static void RegisterLuaFunctions(const char *opt_table)
 {
     if (opt_table) lua_createtable(L, 0, sizeof(raylib_functions)/sizeof(raylib_functions[0]));
     else lua_pushglobaltable(L);
@@ -3774,14 +3883,15 @@ RLUADEF void InitLuaDevice(void)
 {
     mainLuaState = luaL_newstate();
     L = mainLuaState;
-
+    
     LuaStartEnum();
-    LuaSetEnum("FULLSCREEN_MODE", 1);
-    LuaSetEnum("SHOW_LOGO", 2);
-    LuaSetEnum("SHOW_MOUSE_CURSOR", 4);
-    LuaSetEnum("CENTERED_MODE", 8);
-    LuaSetEnum("MSAA_4X_HINT", 16);
-    LuaSetEnum("VSYNC_HINT", 32);
+    LuaSetEnum("SHOW_LOGO", 1);
+    LuaSetEnum("FULLSCREEN_MODE", 2);
+    LuaSetEnum("WINDOW_RESIZABLE", 4);
+    LuaSetEnum("WINDOW_DECORATED", 8);
+    LuaSetEnum("WINDOW_TRANSPARENT", 16);
+    LuaSetEnum("MSAA_4X_HINT", 32);
+    LuaSetEnum("VSYNC_HINT", 64);
     LuaEndEnum("FLAG");
 
     LuaStartEnum();
@@ -4033,7 +4143,7 @@ RLUADEF void InitLuaDevice(void)
     luaL_openlibs(L);
     LuaBuildOpaqueMetatables();
 
-    LuaRegisterRayLib(0);
+    RegisterLuaFunctions(0);        // Register Lua raylib functions
 }
 
 // De-initialize Lua system
