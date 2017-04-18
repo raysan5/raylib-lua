@@ -52,7 +52,7 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
     -- Display information about closest hit
     RayHitInfo nearestHit
     char *hitObjectName = "None"
-    nearestHit.distance = FLT_MAX
+    nearestHit.distance = 100000;           -- Very far distance...
     nearestHit.hit = false
     cursorColor = WHITE
 
@@ -76,7 +76,7 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         cursorColor = PURPLE
         hitObjectName = "Triangle"
 
-        bary = Barycenter(nearestHit.hitPosition, ta, tb, tc)
+        bary = VectorBarycenter(nearestHit.hitPosition, ta, tb, tc)
         hitTriangle = true
     else 
         hitTriangle = false
@@ -141,22 +141,22 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         End3dMode()
         
         -- Draw some debug GUI text
-        DrawText(text.format("Hit Object: %s", hitObjectName), 10, 50, 10, BLACK)
+        DrawText(string.format("Hit Object: %s", hitObjectName), 10, 50, 10, BLACK)
 
         if (nearestHit.hit) then
             int ypos = 70
 
-            DrawText(FormatText("Distance: %3.2f", nearestHit.distance), 10, ypos, 10, BLACK)
-            DrawText(FormatText("Hit Pos: %3.2f %3.2f %3.2f", 
+            DrawText(string.format("Distance: %3.2f", nearestHit.distance), 10, ypos, 10, BLACK)
+            DrawText(string.format("Hit Pos: %3.2f %3.2f %3.2f", 
                                 nearestHit.hitPosition.x, 
                                 nearestHit.hitPosition.y, 
                                 nearestHit.hitPosition.z), 10, ypos + 15, 10, BLACK)
-            DrawText(FormatText("Hit Norm: %3.2f %3.2f %3.2f", 
+            DrawText(string.format("Hit Norm: %3.2f %3.2f %3.2f", 
                                 nearestHit.hitNormal.x, 
                                 nearestHit.hitNormal.y, 
                                 nearestHit.hitNormal.z), 10, ypos + 30, 10, BLACK)
 
-            if (hitTriangle) then DrawText(FormatText("Barycenter: %3.2f %3.2f %3.2f",  bary.x, bary.y, bary.z), 10, ypos + 45, 10, BLACK) end
+            if (hitTriangle) then DrawText(string.format("Barycenter: %3.2f %3.2f %3.2f",  bary.x, bary.y, bary.z), 10, ypos + 45, 10, BLACK) end
         end
 
         DrawText("Use Mouse to Move Camera", 10, 430, 10, GRAY)
@@ -172,5 +172,5 @@ end
 UnloadModel(tower)        -- Unload model
 UnloadTexture(texture)    -- Unload texture
 
-CloseWindow()              -- Close window and OpenGL context
+CloseWindow()             -- Close window and OpenGL context
 -------------------------------------------------------------------------------------------

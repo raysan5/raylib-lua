@@ -23,13 +23,11 @@ local screenHeight = 450
 
 InitWindow(screenWidth, screenHeight, "raylib [shaders] example - shapes and texture shaders")
 
-local sonic = LoadTexture("resources/texture_formats/sonic.png")
+local sonic = LoadTexture("resources/fudesumi.png")
 
 -- NOTE: Using GLSL 330 shader version, on OpenGL ES 2.0 use GLSL 100 shader version 
 local shader = LoadShader("resources/shaders/glsl330/base.vs", 
                           "resources/shaders/glsl330/grayscale.fs")
-                           
--- Shader usage is also different than models/postprocessing, shader is just activated when required
 
 SetTargetFPS(60)                        -- Set our game to run at 60 frames-per-second
 -------------------------------------------------------------------------------------------
@@ -83,19 +81,21 @@ while not WindowShouldClose() do        -- Detect window close button or ESC key
         -- Activate our custom shader to be applied on next shapes/textures drawings
         BeginShaderMode(shader)
 
-            DrawTexture(sonic, 380, -10, WHITE)    -- Using custom shader
+            DrawTexture(fudesumi, 500, -30, WHITE)    -- Using custom shader
         
         -- Activate our default shader for next drawings
         EndShaderMode()
         
+        DrawText("(c) Fudesumi sprite by Eiden Marsal", 380, screenHeight - 20, 10, GRAY)
+
     EndDrawing()
     ---------------------------------------------------------------------------------------
 end
 
 -- De-Initialization
 -------------------------------------------------------------------------------------------
-UnloadShader(shader)   -- Unload shader
-UnloadTexture(sonic)   -- Unload texture
+UnloadShader(shader)      -- Unload shader
+UnloadTexture(fudesumi)   -- Unload texture
 
-CloseWindow()          -- Close window and OpenGL context
+CloseWindow()             -- Close window and OpenGL context
 -------------------------------------------------------------------------------------------

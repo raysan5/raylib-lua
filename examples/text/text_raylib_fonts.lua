@@ -22,14 +22,14 @@ InitWindow(screenWidth, screenHeight, "raylib [text] example - rBMF fonts")
 -- NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
 local fonts = {}
 
-fonts[1] = LoadSpriteFont("resources/fonts/alagard.rbmf")       -- rBMF font loading
-fonts[2] = LoadSpriteFont("resources/fonts/pixelplay.rbmf")     -- rBMF font loading
-fonts[3] = LoadSpriteFont("resources/fonts/mecha.rbmf")         -- rBMF font loading
-fonts[4] = LoadSpriteFont("resources/fonts/setback.rbmf")       -- rBMF font loading
-fonts[5] = LoadSpriteFont("resources/fonts/romulus.rbmf")       -- rBMF font loading
-fonts[6] = LoadSpriteFont("resources/fonts/pixantiqua.rbmf")    -- rBMF font loading
-fonts[7] = LoadSpriteFont("resources/fonts/alpha_beta.rbmf")    -- rBMF font loading
-fonts[8] = LoadSpriteFont("resources/fonts/jupiter_crash.rbmf") -- rBMF font loading
+fonts[1] = LoadSpriteFont("resources/fonts/alagard.png")
+fonts[2] = LoadSpriteFont("resources/fonts/pixelplay.png")
+fonts[3] = LoadSpriteFont("resources/fonts/mecha.png")
+fonts[4] = LoadSpriteFont("resources/fonts/setback.png")
+fonts[5] = LoadSpriteFont("resources/fonts/romulus.png")
+fonts[6] = LoadSpriteFont("resources/fonts/pixantiqua.png")
+fonts[7] = LoadSpriteFont("resources/fonts/alpha_beta.png")
+fonts[8] = LoadSpriteFont("resources/fonts/jupiter_crash.png")
 
 local messages = { "ALAGARD FONT designed by Hewett Tsoi", 
                    "PIXELPLAY FONT designed by Aleksander Shevchuk",
@@ -46,11 +46,16 @@ local positions = {}
 
 for i = 1, 8 do
     positions[i] = Vector2(0, 0)
-    positions[i].x = screenWidth/2 - MeasureTextEx(fonts[i], messages[i], fonts[i].size*2, spacings[i]).x/2
-    positions[i].y = 60 + fonts[i].size + 45*(i - 1)
+    positions[i].x = screenWidth/2 - MeasureTextEx(fonts[i], messages[i], fonts[i].baseSize*2, spacings[i]).x/2
+    positions[i].y = 60 + fonts[i].baseSize + 45*(i - 1)
 end
 
-local colors = { MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, LIME, GOLD, BLACK }
+-- Small Y position corrections
+positions[4].y = positions[4].y + 8
+positions[5].y = positions[5].y + 2
+positions[8].y = positions[8].y - 8
+
+local colors = { MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, LIME, GOLD, RED }
 
 SetTargetFPS(60)            -- Set target frames-per-second
 -------------------------------------------------------------------------------------------
@@ -72,7 +77,7 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         DrawLine(220, 50, 590, 50, DARKGRAY)
         
         for i = 1, 8 do
-            DrawTextEx(fonts[i], messages[i], positions[i], fonts[i].size*2, spacings[i], colors[i])
+            DrawTextEx(fonts[i], messages[i], positions[i], fonts[i].baseSize*2, spacings[i], colors[i])
         end
 
     EndDrawing()

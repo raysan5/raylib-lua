@@ -17,10 +17,10 @@ local screenHeight = 450
 InitWindow(screenWidth, screenHeight, "raylib [textures] examples - texture source and destination rectangles")
 
 -- NOTE: Textures MUST be loaded after Window initialization (OpenGL context is required)
-local guybrush = LoadTexture("resources/guybrush.png")        -- Texture loading
+local scarfy = LoadTexture("resources/scarfy.png")        -- Texture loading
 
-local frameWidth = guybrush.width/7
-local frameHeight = guybrush.height
+local frameWidth = scarfy.width/6
+local frameHeight = scarfy.height
 
 -- NOTE: Source rectangle (part of the texture to use for drawing)
 local sourceRec = Rectangle(0, 0, frameWidth, frameHeight)
@@ -54,10 +54,12 @@ while not WindowShouldClose() do            -- Detect window close button or ESC
         -- destRec defines the rectangle where our texture part will fit (scaling it to fit)
         -- origin defines the point of the texture used as reference for rotation and scaling
         -- rotation defines the texture rotation (using origin as rotation point)
-        DrawTexturePro(guybrush, sourceRec, destRec, origin, rotation, WHITE)
+        DrawTexturePro(scarfy, sourceRec, destRec, origin, rotation, WHITE)
 
         DrawLine(destRec.x, 0, destRec.x, screenHeight, GRAY)
         DrawLine(0, destRec.y, screenWidth, destRec.y, GRAY)
+            
+        DrawText("(c) Scarfy sprite by Eiden Marsal", screenWidth - 200, screenHeight - 20, 10, GRAY)
 
     EndDrawing()
     ---------------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ end
 
 -- De-Initialization
 -------------------------------------------------------------------------------------------
-UnloadTexture(guybrush)       -- Texture unloading
+UnloadTexture(scarfy)       -- Texture unloading
 
-CloseWindow()                -- Close window and OpenGL context
+CloseWindow()               -- Close window and OpenGL context
 -------------------------------------------------------------------------------------------

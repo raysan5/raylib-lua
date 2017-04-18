@@ -59,7 +59,7 @@ while not WindowShouldClose() do    -- Detect window close button or ESC key
                 DrawCube(cubePosition, 2.0, 2.0, 2.0, RED)
                 DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, MAROON)
 
-                DrawGrid(10, 1.0)
+                DrawGrid(40, 1.0)
 
             End3dMode()
         
