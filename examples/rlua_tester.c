@@ -101,8 +101,8 @@ int main()
     // ExecuteLuaFile("physics_demo.lua");
     // ExecuteLuaFile("physics_movement.lua");
     // ExecuteLuaFile("physics_friction.lua");
-    // ExecuteLuaFile("physics_restitution.lua");   // ERROR: UpdateAudioStream()
-    // ExecuteLuaFile("physics_shatter.lua");       // ERROR: UpdateAudioStream()
+    // ExecuteLuaFile("physics_restitution.lua");
+    // ExecuteLuaFile("physics_shatter.lua");
     
     // De-Initialization
     //--------------------------------------------------------------------------------------
