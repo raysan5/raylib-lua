@@ -586,10 +586,10 @@ static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo hit)
     lua_setfield(L, -2, "hit");
     lua_pushnumber(L, hit.distance);
     lua_setfield(L, -2, "distance");
-    LuaPush_Vector3(L, hit.hitPosition);
-    lua_setfield(L, -2, "hitPosition");
-    LuaPush_Vector3(L, hit.hitNormal);
-    lua_setfield(L, -2, "hitNormal");
+    LuaPush_Vector3(L, hit.position);
+    lua_setfield(L, -2, "position");
+    LuaPush_Vector3(L, hit.normal);
+    lua_setfield(L, -2, "normal");
 }
 
 static void LuaPush_BoundingBox(lua_State* L, BoundingBox bb)
