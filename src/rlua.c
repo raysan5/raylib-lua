@@ -65,6 +65,10 @@ int main(int argc, char *argv[])
             CloseLuaDevice();           // Close Lua device and free resources
         }
     }
+    else
+    {
+        // TODO: Create raylib window interface supporting Lua file drag&drop and additional options    
+    }
 
     return 0;
 }
