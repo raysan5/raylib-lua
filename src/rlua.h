@@ -90,6 +90,7 @@ RLUADEF void InitLuaDevice(void);                   // Initialize Lua system
 RLUADEF void ExecuteLuaCode(const char *code);      // Execute raylib Lua code
 RLUADEF void ExecuteLuaFile(const char *filename);  // Execute raylib Lua script
 RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
+RLUADEF void SetLuaPath(const char *path);          // Set working Lua directory
 
 /***********************************************************************************
 *
@@ -102,6 +103,9 @@ RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
 #include "raylib.h"
 #include "raymath.h"
 
+#define PHYSAC_IMPLEMENTATION
+#include "physac.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -112,37 +116,44 @@ RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define LuaPush_Image(L, img) LuaPushOpaqueTypeWithMetatable(L, img, Image)
-#define LuaPush_Texture2D(L, tex) LuaPushOpaqueTypeWithMetatable(L, tex, Texture2D)
+#define LuaPush_int(L, value)       lua_pushinteger(L, value)
+#define LuaPush_float(L, value)     lua_pushnumber(L, value);
+#define LuaPush_bool(L, value)      lua_pushboolean(L, value)
+#define LuaPush_string(L, value)    lua_pushstring(L, value)
+
+#define LuaPush_Image(L, img)       LuaPushOpaqueTypeWithMetatable(L, img, Image)
+#define LuaPush_Texture2D(L, tex)   LuaPushOpaqueTypeWithMetatable(L, tex, Texture2D)
 #define LuaPush_RenderTexture2D(L, tex) LuaPushOpaqueTypeWithMetatable(L, tex, RenderTexture2D)
-#define LuaPush_SpriteFont(L, sf) LuaPushOpaqueTypeWithMetatable(L, sf, SpriteFont)
-#define LuaPush_Mesh(L, vd) LuaPushOpaqueType(L, vd)
-#define LuaPush_Shader(L, s) LuaPushOpaqueType(L, s)
-#define LuaPush_Sound(L, snd) LuaPushOpaqueType(L, snd)
-#define LuaPush_Wave(L, wav) LuaPushOpaqueType(L, wav)
-#define LuaPush_Music(L, mus) LuaPushOpaqueType(L, mus)
+#define LuaPush_SpriteFont(L, sf)   LuaPushOpaqueTypeWithMetatable(L, sf, SpriteFont)
+#define LuaPush_Mesh(L, vd)         LuaPushOpaqueType(L, vd)
+#define LuaPush_Shader(L, s)        LuaPushOpaqueType(L, s)
+#define LuaPush_Sound(L, snd)       LuaPushOpaqueType(L, snd)
+#define LuaPush_Wave(L, wav)        LuaPushOpaqueType(L, wav)
+#define LuaPush_Music(L, mus)       LuaPushOpaqueType(L, mus)
 #define LuaPush_AudioStream(L, aud) LuaPushOpaqueType(L, aud)
+#define LuaPush_PhysicsBody(L, body)    LuaPushOpaqueType(L, body)
 
-#define LuaGetArgument_string luaL_checkstring
-#define LuaGetArgument_ptr (void *)luaL_checkinteger
-#define LuaGetArgument_int (int)luaL_checkinteger
-#define LuaGetArgument_unsigned (unsigned)luaL_checkinteger
-#define LuaGetArgument_char (char)luaL_checkinteger
-#define LuaGetArgument_float (float)luaL_checknumber
-#define LuaGetArgument_double luaL_checknumber
+#define LuaGetArgument_string       luaL_checkstring
+#define LuaGetArgument_ptr          (void *)luaL_checkinteger
+#define LuaGetArgument_int          (int)luaL_checkinteger
+#define LuaGetArgument_unsigned     (unsigned)luaL_checkinteger
+#define LuaGetArgument_char         (char)luaL_checkinteger
+#define LuaGetArgument_float        (float)luaL_checknumber
+#define LuaGetArgument_double       luaL_checknumber
 
-#define LuaGetArgument_Image(L, img) *(Image*)LuaGetArgumentOpaqueTypeWithMetatable(L, img, "Image")
-#define LuaGetArgument_Texture2D(L, tex) *(Texture2D*)LuaGetArgumentOpaqueTypeWithMetatable(L, tex, "Texture2D")
-#define LuaGetArgument_RenderTexture2D(L, rtex) *(RenderTexture2D*)LuaGetArgumentOpaqueTypeWithMetatable(L, rtex, "RenderTexture2D")
-#define LuaGetArgument_SpriteFont(L, sf) *(SpriteFont*)LuaGetArgumentOpaqueTypeWithMetatable(L, sf, "SpriteFont")
-#define LuaGetArgument_Mesh(L, vd) *(Mesh*)LuaGetArgumentOpaqueType(L, vd)
-#define LuaGetArgument_Shader(L, s) *(Shader*)LuaGetArgumentOpaqueType(L, s)
-#define LuaGetArgument_Sound(L, snd) *(Sound*)LuaGetArgumentOpaqueType(L, snd)
-#define LuaGetArgument_Wave(L, wav) *(Wave*)LuaGetArgumentOpaqueType(L, wav)
-#define LuaGetArgument_Music(L, mus) *(Music*)LuaGetArgumentOpaqueType(L, mus)
-#define LuaGetArgument_AudioStream(L, aud) *(AudioStream*)LuaGetArgumentOpaqueType(L, aud)
+#define LuaGetArgument_Image(L, img)        *(Image *)LuaGetArgumentOpaqueTypeWithMetatable(L, img, "Image")
+#define LuaGetArgument_Texture2D(L, tex)    *(Texture2D *)LuaGetArgumentOpaqueTypeWithMetatable(L, tex, "Texture2D")
+#define LuaGetArgument_RenderTexture2D(L, rtex) *(RenderTexture2D *)LuaGetArgumentOpaqueTypeWithMetatable(L, rtex, "RenderTexture2D")
+#define LuaGetArgument_SpriteFont(L, sf)    *(SpriteFont *)LuaGetArgumentOpaqueTypeWithMetatable(L, sf, "SpriteFont")
+#define LuaGetArgument_Mesh(L, vd)          *(Mesh *)LuaGetArgumentOpaqueType(L, vd)
+#define LuaGetArgument_Shader(L, s)         *(Shader *)LuaGetArgumentOpaqueType(L, s)
+#define LuaGetArgument_Sound(L, snd)        *(Sound *)LuaGetArgumentOpaqueType(L, snd)
+#define LuaGetArgument_Wave(L, wav)         *(Wave *)LuaGetArgumentOpaqueType(L, wav)
+#define LuaGetArgument_Music(L, mus)        *(Music *)LuaGetArgumentOpaqueType(L, mus)
+#define LuaGetArgument_AudioStream(L, aud)  *(AudioStream *)LuaGetArgumentOpaqueType(L, aud)
+#define LuaGetArgument_PhysicsBody(L, body) *(PhysicsBody *)LuaGetArgumentOpaqueType(L, body)
 
-#define LuaPushOpaqueType(L, str) LuaPushOpaque(L, &str, sizeof(str))
+#define LuaPushOpaqueType(L, str)                    LuaPushOpaque(L, &str, sizeof(str))
 #define LuaPushOpaqueTypeWithMetatable(L, str, meta) LuaPushOpaqueWithMetatable(L, &str, sizeof(str), #meta)
 
 //----------------------------------------------------------------------------------
@@ -186,7 +197,7 @@ static void LuaStartEnum(void)
 
 static void LuaSetEnum(const char *name, int value)
 {
-    lua_pushinteger(L, value);
+    LuaPush_int(L, value);
     lua_setfield(L, -2, name);
 }
 
@@ -232,13 +243,13 @@ static int LuaIndexImage(lua_State* L)
     Image img = LuaGetArgument_Image(L, 1);
     const char *key = luaL_checkstring(L, 2);
     if (!strcmp(key, "width"))
-        lua_pushinteger(L, img.width);
+        LuaPush_int(L, img.width);
     else if (!strcmp(key, "height"))
-        lua_pushinteger(L, img.height);
+        LuaPush_int(L, img.height);
     else if (!strcmp(key, "mipmaps"))
-        lua_pushinteger(L, img.mipmaps);
+        LuaPush_int(L, img.mipmaps);
     else if (!strcmp(key, "format"))
-        lua_pushinteger(L, img.format);
+        LuaPush_int(L, img.format);
     else
         return 0;
     return 1;
@@ -249,15 +260,15 @@ static int LuaIndexTexture2D(lua_State* L)
     Texture2D img = LuaGetArgument_Texture2D(L, 1);
     const char *key = luaL_checkstring(L, 2);
     if (!strcmp(key, "width"))
-        lua_pushinteger(L, img.width);
+        LuaPush_int(L, img.width);
     else if (!strcmp(key, "height"))
-        lua_pushinteger(L, img.height);
+        LuaPush_int(L, img.height);
     else if (!strcmp(key, "mipmaps"))
-        lua_pushinteger(L, img.mipmaps);
+        LuaPush_int(L, img.mipmaps);
     else if (!strcmp(key, "format"))
-        lua_pushinteger(L, img.format);
+        LuaPush_int(L, img.format);
     else if (!strcmp(key, "id"))
-        lua_pushinteger(L, img.id);
+        LuaPush_int(L, img.id);
     else
         return 0;
     return 1;
@@ -281,11 +292,11 @@ static int LuaIndexSpriteFont(lua_State* L)
     SpriteFont img = LuaGetArgument_SpriteFont(L, 1);
     const char *key = luaL_checkstring(L, 2);
     if (!strcmp(key, "baseSize"))
-        lua_pushinteger(L, img.baseSize);
+        LuaPush_int(L, img.baseSize);
     else if (!strcmp(key, "texture"))
         LuaPush_Texture2D(L, img.texture);
     else if (!strcmp(key, "charsCount"))
-        lua_pushinteger(L, img.charsCount);
+        LuaPush_int(L, img.charsCount);
     else
         return 0;
     return 1;
@@ -502,46 +513,46 @@ static Model LuaGetArgument_Model(lua_State* L, int index)
 static void LuaPush_Color(lua_State* L, Color color)
 {
     lua_createtable(L, 0, 4);
-    lua_pushinteger(L, color.r);
+    LuaPush_int(L, color.r);
     lua_setfield(L, -2, "r");
-    lua_pushinteger(L, color.g);
+    LuaPush_int(L, color.g);
     lua_setfield(L, -2, "g");
-    lua_pushinteger(L, color.b);
+    LuaPush_int(L, color.b);
     lua_setfield(L, -2, "b");
-    lua_pushinteger(L, color.a);
+    LuaPush_int(L, color.a);
     lua_setfield(L, -2, "a");
 }
 
 static void LuaPush_Vector2(lua_State* L, Vector2 vec)
 {
     lua_createtable(L, 0, 2);
-    lua_pushnumber(L, vec.x);
+    LuaPush_float(L, vec.x);
     lua_setfield(L, -2, "x");
-    lua_pushnumber(L, vec.y);
+    LuaPush_float(L, vec.y);
     lua_setfield(L, -2, "y");
 }
 
 static void LuaPush_Vector3(lua_State* L, Vector3 vec)
 {
     lua_createtable(L, 0, 3);
-    lua_pushnumber(L, vec.x);
+    LuaPush_float(L, vec.x);
     lua_setfield(L, -2, "x");
-    lua_pushnumber(L, vec.y);
+    LuaPush_float(L, vec.y);
     lua_setfield(L, -2, "y");
-    lua_pushnumber(L, vec.z);
+    LuaPush_float(L, vec.z);
     lua_setfield(L, -2, "z");
 }
 
 static void LuaPush_Quaternion(lua_State* L, Quaternion vec)
 {
     lua_createtable(L, 0, 4);
-    lua_pushnumber(L, vec.x);
+    LuaPush_float(L, vec.x);
     lua_setfield(L, -2, "x");
-    lua_pushnumber(L, vec.y);
+    LuaPush_float(L, vec.y);
     lua_setfield(L, -2, "y");
-    lua_pushnumber(L, vec.z);
+    LuaPush_float(L, vec.z);
     lua_setfield(L, -2, "z");
-    lua_pushnumber(L, vec.w);
+    LuaPush_float(L, vec.w);
     lua_setfield(L, -2, "w");
 }
 
@@ -552,7 +563,7 @@ static void LuaPush_Matrix(lua_State* L, Matrix *matrix)
     float* num = (&matrix->m0);
     for (i = 0; i < 16; i++)
     {
-        lua_pushnumber(L, num[i]);
+        LuaPush_float(L, num[i]);
         lua_rawseti(L, -2, i + 1);
     }
 }
@@ -560,13 +571,13 @@ static void LuaPush_Matrix(lua_State* L, Matrix *matrix)
 static void LuaPush_Rectangle(lua_State* L, Rectangle rect)
 {
     lua_createtable(L, 0, 4);
-    lua_pushinteger(L, rect.x);
+    LuaPush_int(L, rect.x);
     lua_setfield(L, -2, "x");
-    lua_pushinteger(L, rect.y);
+    LuaPush_int(L, rect.y);
     lua_setfield(L, -2, "y");
-    lua_pushinteger(L, rect.width);
+    LuaPush_int(L, rect.width);
     lua_setfield(L, -2, "width");
-    lua_pushinteger(L, rect.height);
+    LuaPush_int(L, rect.height);
     lua_setfield(L, -2, "height");
 }
 
@@ -582,9 +593,9 @@ static void LuaPush_Ray(lua_State* L, Ray ray)
 static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo hit)
 {
     lua_createtable(L, 0, 4);
-    lua_pushinteger(L, hit.hit);
+    LuaPush_int(L, hit.hit);
     lua_setfield(L, -2, "hit");
-    lua_pushnumber(L, hit.distance);
+    LuaPush_float(L, hit.distance);
     lua_setfield(L, -2, "distance");
     LuaPush_Vector3(L, hit.position);
     lua_setfield(L, -2, "position");
@@ -610,7 +621,7 @@ static void LuaPush_Camera(lua_State* L, Camera cam)
     lua_setfield(L, -2, "target");
     LuaPush_Vector3(L, cam.up);
     lua_setfield(L, -2, "up");
-    lua_pushnumber(L, cam.fovy);
+    LuaPush_float(L, cam.fovy);
     lua_setfield(L, -2, "fovy");
 }
 
@@ -621,9 +632,9 @@ static void LuaPush_Camera2D(lua_State* L, Camera2D cam)
     lua_setfield(L, -2, "offset");
     LuaPush_Vector2(L, cam.target);
     lua_setfield(L, -2, "target");
-    lua_pushnumber(L, cam.rotation);
+    LuaPush_float(L, cam.rotation);
     lua_setfield(L, -2, "rotation");
-    lua_pushnumber(L, cam.zoom);
+    LuaPush_float(L, cam.zoom);
     lua_setfield(L, -2, "zoom");
 }
 
@@ -644,7 +655,7 @@ static void LuaPush_Material(lua_State* L, Material mat)
     lua_setfield(L, -2, "colAmbient");
     LuaPush_Color(L, mat.colSpecular);
     lua_setfield(L, -2, "colSpecular");
-    lua_pushnumber(L, mat.glossiness);
+    LuaPush_float(L, mat.glossiness);
     lua_setfield(L, -2, "glossiness");
 }
 
@@ -753,7 +764,7 @@ int lua_InitWindow(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
-    const char * arg3 = LuaGetArgument_string(L, 3);
+    const char *arg3 = LuaGetArgument_string(L, 3);
     InitWindow(arg1, arg2, arg3);
     return 0;
 }
@@ -769,7 +780,7 @@ int lua_CloseWindow(lua_State* L)
 int lua_WindowShouldClose(lua_State* L)
 {
     bool result = WindowShouldClose();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -777,7 +788,7 @@ int lua_WindowShouldClose(lua_State* L)
 int lua_IsWindowMinimized(lua_State* L)
 {
     bool result = IsWindowMinimized();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -789,22 +800,44 @@ int lua_ToggleFullscreen(lua_State* L)
 }
 
 // Set icon for window (only PLATFORM_DESKTOP)
-// TODO: void SetWindowIcon(Image image);
+int lua_SetWindowIcon(lua_State* L)
+{
+    Image arg1 = LuaGetArgument_Image(L, 1);
+    SetWindowIcon(arg1);
+    return 0;
+}
 
 // Set window position on screen (only PLATFORM_DESKTOP)
-// TODO: void SetWindowPosition(int x, int y);
+int lua_SetWindowPosition(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    int arg2 = LuaGetArgument_int(L, 2);
+    SetWindowPosition(arg1, arg2);
+    return 0;
+}
 
 // Set monitor for the current window (fullscreen mode)
-// TODO: void SetWindowMonitor(int monitor);
+int lua_SetWindowMonitor(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    SetWindowMonitor(arg1);
+    return 0;
+}
 
 // Set window minimum dimensions (FLAG_WINDOW_RESIZABLE)
-// TODO: void SetWindowMinSize(int width, int height);
+int lua_SetWindowMinSize(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    int arg2 = LuaGetArgument_int(L, 2);
+    SetWindowMinSize(arg1, arg2);
+    return 0;
+}
 
 // Get current screen width
 int lua_GetScreenWidth(lua_State* L)
 {
     int result = GetScreenWidth();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -812,7 +845,7 @@ int lua_GetScreenWidth(lua_State* L)
 int lua_GetScreenHeight(lua_State* L)
 {
     int result = GetScreenHeight();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -834,7 +867,7 @@ int lua_HideCursor(lua_State* L)
 int lua_IsCursorHidden(lua_State* L)
 {
     bool result = IsCursorHidden();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -979,7 +1012,7 @@ int lua_SetTargetFPS(lua_State* L)
 int lua_GetFPS(lua_State* L)
 {
     float result = GetFPS();
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -987,7 +1020,7 @@ int lua_GetFPS(lua_State* L)
 int lua_GetFrameTime(lua_State* L)
 {
     float result = GetFrameTime();
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -1005,7 +1038,7 @@ int lua_GetHexValue(lua_State* L)
 {
     Color arg1 = LuaGetArgument_Color(L, 1);
     int result = GetHexValue(arg1);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1013,11 +1046,11 @@ int lua_GetHexValue(lua_State* L)
 int lua_ColorToFloat(lua_State* L)
 {
     Color arg1 = LuaGetArgument_Color(L, 1);
-    float * result = ColorToFloat(arg1);
+    float *result = ColorToFloat(arg1);
     lua_createtable(L, 4, 0);
     for (int i = 0; i < 4; i++)
     {
-        lua_pushnumber(L, result[i]);
+        LuaPush_float(L, result[i]);
         lua_rawseti(L, -2, i + 1);
     }
     free(result);
@@ -1028,11 +1061,11 @@ int lua_ColorToFloat(lua_State* L)
 int lua_VectorToFloat(lua_State* L)
 {
     Vector3 arg1 = LuaGetArgument_Vector3(L, 1);
-    float * result = VectorToFloat(arg1);
+    float *result = VectorToFloat(arg1);
     lua_createtable(L, 3, 0);
     for (int i = 0; i < 3; i++)
     {
-        lua_pushnumber(L, result[i]);
+        LuaPush_float(L, result[i]);
         lua_rawseti(L, -2, i + 1);
     }
     free(result);
@@ -1043,11 +1076,11 @@ int lua_VectorToFloat(lua_State* L)
 int lua_MatrixToFloat(lua_State* L)
 {
     Matrix arg1 = LuaGetArgument_Matrix(L, 1);
-    float * result = MatrixToFloat(arg1);
+    float *result = MatrixToFloat(arg1);
     lua_createtable(L, 16, 0);
     for (int i = 0; i < 16; i++)
     {
-        lua_pushnumber(L, result[i]);
+        LuaPush_float(L, result[i]);
         lua_rawseti(L, -2, i + 1);
     }
     free(result);
@@ -1060,7 +1093,7 @@ int lua_GetRandomValue(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     int result = GetRandomValue(arg1, arg2);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1110,16 +1143,27 @@ int lua_TraceLog(lua_State* L)
 }
 
 // Takes a screenshot and saves it in the same folder as executable
-// TODO: void TakeScreenshot(void);
+int lua_TakeScreenshot(lua_State* L)
+{
+    TakeScreenshot();
+    return 0;
+}
 
 // Check file extension
-// TODO: bool IsFileExtension(const char *fileName, const char *ext);
+int lua_IsFileExtension(lua_State* L)
+{
+    const char *arg1 = LuaGetArgument_string(L, 1);
+    const char *arg2 = LuaGetArgument_string(L, 2);
+    bool result = IsFileExtension(arg1, arg2);
+    LuaPush_bool(L, result);
+    return 1;
+}
 
 // Check if a file has been dropped into window
 int lua_IsFileDropped(lua_State* L)
 {
     bool result = IsFileDropped();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1131,7 +1175,7 @@ int lua_GetDroppedFiles(lua_State* L)
     lua_createtable(L, count, 0);
     for (int i = 0; i < count; i++)
     {
-        lua_pushstring(L, result[i]);
+        LuaPush_string(L, result[i]);
         lua_rawseti(L, -2, i + 1);
     }
     return 1;
@@ -1158,7 +1202,7 @@ int lua_StorageLoadValue(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     int result = StorageLoadValue(arg1);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1171,7 +1215,7 @@ int lua_IsKeyPressed(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsKeyPressed(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1180,7 +1224,7 @@ int lua_IsKeyDown(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsKeyDown(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1189,7 +1233,7 @@ int lua_IsKeyReleased(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsKeyReleased(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1198,7 +1242,7 @@ int lua_IsKeyUp(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsKeyUp(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1206,7 +1250,7 @@ int lua_IsKeyUp(lua_State* L)
 int lua_GetKeyPressed(lua_State* L)
 {
     int result = GetKeyPressed();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1223,7 +1267,7 @@ int lua_IsGamepadAvailable(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsGamepadAvailable(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1231,20 +1275,18 @@ int lua_IsGamepadAvailable(lua_State* L)
 int lua_IsGamepadName(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    const char *arg2 = LuaGetArgument_string(L, 2);
     bool result = IsGamepadName(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
 // Return gamepad internal name id
 int lua_GetGamepadName(lua_State* L)
 {
-    // TODO: Return gamepad name id
-    
     int arg1 = LuaGetArgument_int(L, 1);
-    const char * result = GetGamepadName(arg1);
-    //lua_pushboolean(L, result);
+    const char *result = GetGamepadName(arg1);
+    LuaPush_string(L, result);
     return 1;
 }
 
@@ -1254,7 +1296,7 @@ int lua_IsGamepadButtonPressed(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     bool result = IsGamepadButtonPressed(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1264,7 +1306,7 @@ int lua_IsGamepadButtonDown(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     bool result = IsGamepadButtonDown(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1274,7 +1316,7 @@ int lua_IsGamepadButtonReleased(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     bool result = IsGamepadButtonReleased(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1284,7 +1326,7 @@ int lua_IsGamepadButtonUp(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     bool result = IsGamepadButtonUp(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1292,7 +1334,7 @@ int lua_IsGamepadButtonUp(lua_State* L)
 int lua_GetGamepadButtonPressed(lua_State* L)
 {
     int result = GetGamepadButtonPressed();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1301,7 +1343,7 @@ int lua_GetGamepadAxisCount(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     int result = GetGamepadAxisCount(arg1);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1311,7 +1353,7 @@ int lua_GetGamepadAxisMovement(lua_State* L)
     int arg1 = LuaGetArgument_int(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     float result = GetGamepadAxisMovement(arg1, arg2);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -1320,7 +1362,7 @@ int lua_IsMouseButtonPressed(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsMouseButtonPressed(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1329,7 +1371,7 @@ int lua_IsMouseButtonDown(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsMouseButtonDown(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1338,7 +1380,7 @@ int lua_IsMouseButtonReleased(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsMouseButtonReleased(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1347,7 +1389,7 @@ int lua_IsMouseButtonUp(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsMouseButtonUp(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1355,7 +1397,7 @@ int lua_IsMouseButtonUp(lua_State* L)
 int lua_GetMouseX(lua_State* L)
 {
     int result = GetMouseX();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1363,7 +1405,7 @@ int lua_GetMouseX(lua_State* L)
 int lua_GetMouseY(lua_State* L)
 {
     int result = GetMouseY();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1387,7 +1429,7 @@ int lua_SetMousePosition(lua_State* L)
 int lua_GetMouseWheelMove(lua_State* L)
 {
     int result = GetMouseWheelMove();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1395,7 +1437,7 @@ int lua_GetMouseWheelMove(lua_State* L)
 int lua_GetTouchX(lua_State* L)
 {
     int result = GetTouchX();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1403,7 +1445,7 @@ int lua_GetTouchX(lua_State* L)
 int lua_GetTouchY(lua_State* L)
 {
     int result = GetTouchY();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1433,7 +1475,7 @@ int lua_IsGestureDetected(lua_State* L)
 {
     int arg1 = LuaGetArgument_int(L, 1);
     bool result = IsGestureDetected(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1441,7 +1483,7 @@ int lua_IsGestureDetected(lua_State* L)
 int lua_GetTouchPointsCount(lua_State* L)
 {
     int result = GetTouchPointsCount();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1449,7 +1491,7 @@ int lua_GetTouchPointsCount(lua_State* L)
 int lua_GetGestureDetected(lua_State* L)
 {
     int result = GetGestureDetected();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1457,7 +1499,7 @@ int lua_GetGestureDetected(lua_State* L)
 int lua_GetGestureHoldDuration(lua_State* L)
 {
     int result = GetGestureHoldDuration();
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -1473,7 +1515,7 @@ int lua_GetGestureDragVector(lua_State* L)
 int lua_GetGestureDragAngle(lua_State* L)
 {
     float result = GetGestureDragAngle();
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -1489,7 +1531,7 @@ int lua_GetGesturePinchVector(lua_State* L)
 int lua_GetGesturePinchAngle(lua_State* L)
 {
     float result = GetGesturePinchAngle();
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -1685,7 +1727,15 @@ int lua_DrawRectangleRec(lua_State* L)
 }
 
 // Draw a color-filled rectangle with pro parameters
-// TODO: void DrawRectanglePro(Rectangle rec, Vector2 origin, float rotation, Color color);
+int lua_DrawRectanglePro(lua_State* L)
+{
+    Rectangle arg1 = LuaGetArgument_Rectangle(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float arg3 = LuaGetArgument_float(L, 2);
+    Color arg4 = LuaGetArgument_Color(L, 2);
+    DrawRectanglePro(arg1, arg2, arg3, arg4);
+    return 0;
+}
 
 // Draw a gradient-filled rectangle
 int lua_DrawRectangleGradient(lua_State* L)
@@ -1807,7 +1857,7 @@ int lua_CheckCollisionRecs(lua_State* L)
     Rectangle arg1 = LuaGetArgument_Rectangle(L, 1);
     Rectangle arg2 = LuaGetArgument_Rectangle(L, 2);
     bool result = CheckCollisionRecs(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1819,7 +1869,7 @@ int lua_CheckCollisionCircles(lua_State* L)
     Vector2 arg3 = LuaGetArgument_Vector2(L, 3);
     float arg4 = LuaGetArgument_float(L, 4);
     bool result = CheckCollisionCircles(arg1, arg2, arg3, arg4);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1830,7 +1880,7 @@ int lua_CheckCollisionCircleRec(lua_State* L)
     float arg2 = LuaGetArgument_float(L, 2);
     Rectangle arg3 = LuaGetArgument_Rectangle(L, 3);
     bool result = CheckCollisionCircleRec(arg1, arg2, arg3);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1850,7 +1900,7 @@ int lua_CheckCollisionPointRec(lua_State* L)
     Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
     Rectangle arg2 = LuaGetArgument_Rectangle(L, 2);
     bool result = CheckCollisionPointRec(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1861,7 +1911,7 @@ int lua_CheckCollisionPointCircle(lua_State* L)
     Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
     float arg3 = LuaGetArgument_float(L, 3);
     bool result = CheckCollisionPointCircle(arg1, arg2, arg3);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1873,7 +1923,7 @@ int lua_CheckCollisionPointTriangle(lua_State* L)
     Vector2 arg3 = LuaGetArgument_Vector2(L, 3);
     Vector2 arg4 = LuaGetArgument_Vector2(L, 4);
     bool result = CheckCollisionPointTriangle(arg1, arg2, arg3, arg4);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -1884,7 +1934,7 @@ int lua_CheckCollisionPointTriangle(lua_State* L)
 // Load image from file into CPU memory (RAM)
 int lua_LoadImage(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Image result = LoadImage(arg1);
     LuaPush_Image(L, result);
     return 1;
@@ -1893,9 +1943,9 @@ int lua_LoadImage(lua_State* L)
 // Load image from Color array data (RGBA - 32bit)
 int lua_LoadImageEx(lua_State* L)
 {
-    // TODO: Image LoadImageEx(Color *pixels, int width, int height);
+    // TODO: arg1 parameter is a Color array...
     
-    GET_TABLE(Color, arg1, 1);
+    GET_TABLE(Color, arg1, 1);              // Color *pixels
     int arg2 = LuaGetArgument_int(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     Image result = LoadImageEx(arg1, arg2, arg3); // ISSUE: #3 number expected, got no value
@@ -1905,12 +1955,24 @@ int lua_LoadImageEx(lua_State* L)
 }
 
 // Load image from raw data with pro parameters
-// TODO: Image LoadImagePro(void *data, int width, int height, int format); 
+int lua_LoadImagePro(lua_State* L)
+{
+    // TODO: arg1 parameter is a void pointer...
+    
+    void *arg1 = LuaGetArgument_ptr(L, 1);
+    int arg2 = LuaGetArgument_int(L, 2);
+    int arg3 = LuaGetArgument_int(L, 3);
+    int arg4 = LuaGetArgument_int(L, 4);
+    Image result = LoadImagePro(arg1, arg2, arg3, arg4);
+    LuaPush_Image(L, result);
+    free(arg1);
+    return 1;
+}
 
 // Load image from RAW file data
 int lua_LoadImageRaw(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
@@ -1923,7 +1985,7 @@ int lua_LoadImageRaw(lua_State* L)
 // Load texture from file into GPU memory (VRAM)
 int lua_LoadTexture(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Texture2D result = LoadTexture(arg1);
     LuaPush_Texture2D(L, result);
     return 1;
@@ -1975,10 +2037,10 @@ int lua_UnloadRenderTexture(lua_State* L)
 // Get pixel data from image as a Color struct array
 int lua_GetImageData(lua_State* L)
 {
-    // TODO: Color *GetImageData(Image image);
-    
+    // TODO: return value is a Color array
+
     Image arg1 = LuaGetArgument_Image(L, 1);
-    Color * result = GetImageData(arg1);
+    Color *result = GetImageData(arg1);
     lua_createtable(L, arg1.width*arg1.height, 0);
     for (int i = 0; i < arg1.width*arg1.height; i++)
     {
@@ -2001,10 +2063,10 @@ int lua_GetTextureData(lua_State* L)
 // Update GPU texture with new data
 int lua_UpdateTexture(lua_State* L)
 {
-    // TODO: void UpdateTexture(Texture2D texture, void *pixels);
+    // TODO: arg2 parameters is a void pointer...
     
     Texture2D arg1 = LuaGetArgument_Texture2D(L, 1);
-    void * arg2 = (char *)LuaGetArgument_string(L, 2);  // NOTE: Getting (void *) as string?
+    void *arg2 = LuaGetArgument_ptr(L, 2);
     UpdateTexture(arg1, arg2);      // ISSUE: #2 string expected, got table -> GetImageData() returns a table!
     return 0;
 }
@@ -2030,7 +2092,14 @@ int lua_ImageFormat(lua_State* L)
 }
 
 // Apply alpha mask to image
-// TODO: void ImageAlphaMask(Image *image, Image alphaMask);
+int lua_ImageAlphaMask(lua_State* L)
+{
+    Image arg1 = LuaGetArgument_Image(L, 1);
+    Image arg2 = LuaGetArgument_Image(L, 2);
+    ImageAlphaMask(&arg1, arg2);
+    LuaPush_Image(L, arg1);
+    return 1;
+}
 
 // Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
 int lua_ImageDither(lua_State* L)
@@ -2089,7 +2158,7 @@ int lua_ImageResizeNN(lua_State* L)
 // Create an image from text (default font)
 int lua_ImageText(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     Color arg3 = LuaGetArgument_Color(L, 3);
     Image result = ImageText(arg1, arg2, arg3);
@@ -2101,7 +2170,7 @@ int lua_ImageText(lua_State* L)
 int lua_ImageTextEx(lua_State* L)
 {
     SpriteFont arg1 = LuaGetArgument_SpriteFont(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    const char *arg2 = LuaGetArgument_string(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
     Color arg5 = LuaGetArgument_Color(L, 5);
@@ -2127,7 +2196,7 @@ int lua_ImageDrawText(lua_State* L)
 {
     Image arg1 = LuaGetArgument_Image(L, 1);
     Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
-    const char * arg3 = LuaGetArgument_string(L, 3);
+    const char *arg3 = LuaGetArgument_string(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
     Color arg5 = LuaGetArgument_Color(L, 5);
     ImageDrawText(&arg1, arg2, arg3, arg4, arg5);
@@ -2141,7 +2210,7 @@ int lua_ImageDrawTextEx(lua_State* L)
     Image arg1 = LuaGetArgument_Image(L, 1);
     Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
     SpriteFont arg3 = LuaGetArgument_SpriteFont(L, 3);
-    const char * arg4 = LuaGetArgument_string(L, 4);
+    const char *arg4 = LuaGetArgument_string(L, 4);
     float arg5 = LuaGetArgument_float(L, 5);
     int arg6 = LuaGetArgument_int(L, 6);
     Color arg7 = LuaGetArgument_Color(L, 7);
@@ -2315,7 +2384,7 @@ int lua_GetDefaultFont(lua_State* L)
 // Load SpriteFont from file into GPU memory (VRAM)
 int lua_LoadSpriteFont(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     SpriteFont result = LoadSpriteFont(arg1);
     LuaPush_SpriteFont(L, result);
     return 1;
@@ -2324,7 +2393,7 @@ int lua_LoadSpriteFont(lua_State* L)
 // Load SpriteFont from file with extended parameters
 int lua_LoadSpriteFontEx(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
@@ -2344,7 +2413,7 @@ int lua_UnloadSpriteFont(lua_State* L)
 // Draw text (using default font)
 int lua_DrawText(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
@@ -2357,7 +2426,7 @@ int lua_DrawText(lua_State* L)
 int lua_DrawTextEx(lua_State* L)
 {
     SpriteFont arg1 = LuaGetArgument_SpriteFont(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    const char *arg2 = LuaGetArgument_string(L, 2);
     Vector2 arg3 = LuaGetArgument_Vector2(L, 3);
     float arg4 = LuaGetArgument_float(L, 4);
     int arg5 = LuaGetArgument_int(L, 5);
@@ -2369,10 +2438,10 @@ int lua_DrawTextEx(lua_State* L)
 // Measure string width for default font
 int lua_MeasureText(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     int arg2 = LuaGetArgument_int(L, 2);
     int result = MeasureText(arg1, arg2);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -2380,7 +2449,7 @@ int lua_MeasureText(lua_State* L)
 int lua_MeasureTextEx(lua_State* L)
 {
     SpriteFont arg1 = LuaGetArgument_SpriteFont(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    const char *arg2 = LuaGetArgument_string(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
     Vector2 result = MeasureTextEx(arg1, arg2, arg3, arg4);
@@ -2574,22 +2643,49 @@ int lua_DrawGizmo(lua_State* L)
 //------------------------------------------------------------------------------------
 
 // Load mesh from file
-// TODO: Mesh LoadMesh(const char *fileName);
+int lua_LoadMesh(lua_State* L)
+{
+    const char *arg1 = LuaGetArgument_string(L, 1);
+    Mesh result = LoadMesh(arg1);
+    LuaPush_Mesh(L, result);
+    return 1;
+}
 
 // Load mesh from vertex data
-// TODO: Mesh LoadMeshEx(int numVertex, float *vData, float *vtData, float *vnData, Color *cData);
+int lua_LoadMeshEx(lua_State* L)
+{
+    // TODO: arg2, arg3, arg4, arg5 params should be float arrays...
+    /*
+    int arg1 = LuaGetArgument_int(L, 1);
+    float *arg2 = LuaGetArgument_ptr(L, 2);   // float *vData
+    float *arg3 = LuaGetArgument_ptr(L, 3);   // float *vtData
+    float *arg4 = LuaGetArgument_ptr(L, 4);   // float *vnData
+    float *arg5 = LuaGetArgument_ptr(L, 5);   // float *cData
+    Mesh result = LoadMeshEx(arg1, arg2, arg3, arg4, arg5);
+    LuaPush_Mesh(L, result);
+    return 1;
+    */
+    return 0;
+}
 
 // Load model from file
 int lua_LoadModel(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Model result = LoadModel(arg1);
     LuaPush_Model(L, result);
     return 1;
 }
 
 // Load model from mesh data
-// TODO: Model LoadModelFromMesh(Mesh data, bool dynamic);
+int lua_LoadModelFromMesh(lua_State* L)
+{
+    Mesh arg1 = LuaGetArgument_Mesh(L, 1);
+    bool arg2 = LuaGetArgument_int(L, 2);           // bool
+    Model result = LoadModelFromMesh(arg1, arg2);
+    LuaPush_Model(L, result);
+    return 1;
+}
 
 // Load heightmap model from image data
 int lua_LoadHeightmap(lua_State* L)
@@ -2611,7 +2707,13 @@ int lua_LoadCubicmap(lua_State* L)
 }
 
 // Unload mesh from memory (RAM and/or VRAM)
-// TODO: void UnloadMesh(Mesh *mesh);
+int lua_UnloadMesh(lua_State* L)
+{
+    Mesh arg1 = LuaGetArgument_Mesh(L, 1);
+    UnloadMesh(&arg1);
+    LuaPush_Mesh(L, arg1);
+    return 1;
+}
 
 // Unload model from memory (RAM and/or VRAM)
 int lua_UnloadModel(lua_State* L)
@@ -2624,7 +2726,7 @@ int lua_UnloadModel(lua_State* L)
 // Load material from file
 int lua_LoadMaterial(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Material result = LoadMaterial(arg1);
     LuaPush_Material(L, result);
     return 1;
@@ -2695,7 +2797,13 @@ int lua_DrawModelWiresEx(lua_State* L)
 }
 
 // Draw bounding box (wires)
-// TODO: void DrawBoundingBox(BoundingBox box, Color color);  
+int lua_DrawBoundingBox(lua_State* L)
+{
+    BoundingBox arg1 = LuaGetArgument_BoundingBox(L, 1);
+    Color arg2 = LuaGetArgument_Color(L, 2);
+    DrawBoundingBox(arg1, arg2);
+    return 0;
+}
 
 // Draw a billboard texture
 int lua_DrawBillboard(lua_State* L)
@@ -2739,7 +2847,7 @@ int lua_CheckCollisionSpheres(lua_State* L)
     Vector3 arg3 = LuaGetArgument_Vector3(L, 3);
     float arg4 = LuaGetArgument_float(L, 4);
     bool result = CheckCollisionSpheres(arg1, arg2, arg3, arg4);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -2749,7 +2857,7 @@ int lua_CheckCollisionBoxes(lua_State* L)
     BoundingBox arg1 = LuaGetArgument_BoundingBox(L, 1);
     BoundingBox arg2 = LuaGetArgument_BoundingBox(L, 2);
     bool result = CheckCollisionBoxes(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -2760,7 +2868,7 @@ int lua_CheckCollisionBoxSphere(lua_State* L)
     Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
     float arg3 = LuaGetArgument_float(L, 3);
     bool result = CheckCollisionBoxSphere(arg1, arg2, arg3);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -2771,7 +2879,7 @@ int lua_CheckCollisionRaySphere(lua_State* L)
     Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
     float arg3 = LuaGetArgument_float(L, 3);
     bool result = CheckCollisionRaySphere(arg1, arg2, arg3);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -2783,7 +2891,7 @@ int lua_CheckCollisionRaySphereEx(lua_State* L)
     float arg3 = LuaGetArgument_float(L, 3);
     Vector3 arg4 = LuaGetArgument_Vector3(L, 4);
     bool result = CheckCollisionRaySphereEx(arg1, arg2, arg3, &arg4);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     LuaPush_Vector3(L, arg4);
     return 2;
 }
@@ -2794,31 +2902,62 @@ int lua_CheckCollisionRayBox(lua_State* L)
     Ray arg1 = LuaGetArgument_Ray(L, 1);
     BoundingBox arg2 = LuaGetArgument_BoundingBox(L, 2);
     bool result = CheckCollisionRayBox(arg1, arg2);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
 // Get collision info between ray and mesh
-// TODO: RayHitInfo GetCollisionRayMesh(Ray ray, Mesh *mesh);
+int lua_GetCollisionRayMesh(lua_State* L)
+{
+    // TODO: arg2 param should be Mesh pointer...
+    
+    Ray arg1 = LuaGetArgument_Ray(L, 1);
+    Mesh arg2 = LuaGetArgument_Mesh(L, 2);      // Mesh *mesh
+    RayHitInfo result = GetCollisionRayMesh(arg1, &arg2);
+    LuaPush_RayHitInfo(L, result);
+    return 1;
+}
 
 // Get collision info between ray and triangle
-// TODO: RayHitInfo GetCollisionRayTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3);
+int lua_GetCollisionRayTriangle(lua_State* L)
+{
+    Ray arg1 = LuaGetArgument_Ray(L, 1);
+    Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
+    Vector3 arg3 = LuaGetArgument_Vector3(L, 3);
+    Vector3 arg4 = LuaGetArgument_Vector3(L, 4);
+    RayHitInfo result = GetCollisionRayTriangle(arg1, arg2, arg3, arg4);
+    LuaPush_RayHitInfo(L, result);
+    return 1;
+}
 
 // Get collision info between ray and ground plane (Y-normal plane)
-// TODO: RayHitInfo GetCollisionRayGround(Ray ray, float groundHeight);
+int lua_GetCollisionRayGround(lua_State* L)
+{
+    Ray arg1 = LuaGetArgument_Ray(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    RayHitInfo result = GetCollisionRayGround(arg1, arg2);
+    LuaPush_RayHitInfo(L, result);
+    return 1;
+}
 
 //------------------------------------------------------------------------------------
 // raylib [raymath] module functions - Shaders
 //------------------------------------------------------------------------------------
 
 // Load chars array from text file
-// TODO: char *LoadText(const char *fileName);
+int lua_LoadText(lua_State* L)
+{
+    const char *arg1 = LuaGetArgument_string(L, 1);
+    char *result = LoadText(arg1);
+    LuaPush_string(L, result);
+    return 1;
+}
 
 // Load shader from files and bind default locations
 int lua_LoadShader(lua_State* L)
 {
-    char * arg1 = (char *)LuaGetArgument_string(L, 1);
-    char * arg2 = (char *)LuaGetArgument_string(L, 2);
+    char *arg1 = (char *)LuaGetArgument_string(L, 1);
+    char *arg2 = (char *)LuaGetArgument_string(L, 2);
     Shader result = LoadShader(arg1, arg2);
     LuaPush_Shader(L, result);
     return 1;
@@ -2852,9 +2991,9 @@ int lua_GetDefaultTexture(lua_State* L)
 int lua_GetShaderLocation(lua_State* L)
 {
     Shader arg1 = LuaGetArgument_Shader(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    const char *arg2 = LuaGetArgument_string(L, 2);
     int result = GetShaderLocation(arg1, arg2);
-    lua_pushinteger(L, result);
+    LuaPush_int(L, result);
     return 1;
 }
 
@@ -2959,7 +3098,7 @@ int lua_CloseVrSimulator(lua_State* L)
 int lua_IsVrSimulatorReady(lua_State* L)
 {
     bool result = IsVrSimulatorReady();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -3015,17 +3154,22 @@ int lua_CloseAudioDevice(lua_State* L)
 int lua_IsAudioDeviceReady(lua_State* L)
 {
     bool result = IsAudioDeviceReady();
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
 // Set master volume (listener)
-// TODO: void SetMasterVolume(float volume);
+int lua_SetMasterVolume(lua_State* L)
+{
+    float arg1 = LuaGetArgument_float(L, 1);
+    SetMasterVolume(arg1);
+    return 0;
+}
 
 // Load wave data from file
 int lua_LoadWave(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Wave result = LoadWave((char *)arg1);
     LuaPush_Wave(L, result);
     return 1;
@@ -3034,9 +3178,9 @@ int lua_LoadWave(lua_State* L)
 // Load wave data from raw array data
 int lua_LoadWaveEx(lua_State* L)
 {
-    // TODO: Wave LoadWaveEx(float *data, int sampleCount, int sampleRate, int sampleSize, int channels);
+    // TODO: arg1 parameter should be a float arrat...
     
-    float * arg1 = 0;
+    float *arg1 = 0;
     int arg2 = LuaGetArgument_int(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     int arg4 = LuaGetArgument_int(L, 4);
@@ -3049,7 +3193,7 @@ int lua_LoadWaveEx(lua_State* L)
 // Load sound from file
 int lua_LoadSound(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Sound result = LoadSound((char*)arg1);
     LuaPush_Sound(L, result);
     return 1;
@@ -3067,10 +3211,10 @@ int lua_LoadSoundFromWave(lua_State* L)
 // Update sound buffer with new data
 int lua_UpdateSound(lua_State* L)
 {
-    // TODO: void UpdateSound(Sound sound, void *data, int numSamples);
+    // TODO: arg2 parameter is a void pointer...
     
     Sound arg1 = LuaGetArgument_Sound(L, 1);
-    const char * arg2 = LuaGetArgument_string(L, 2);
+    void *arg2 = LuaGetArgument_ptr(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     UpdateSound(arg1, arg2, arg3);
     return 0;
@@ -3129,7 +3273,7 @@ int lua_IsSoundPlaying(lua_State* L)
 {
     Sound arg1 = LuaGetArgument_Sound(L, 1);
     bool result = IsSoundPlaying(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -3184,19 +3328,19 @@ int lua_WaveCrop(lua_State* L)
 // Get samples data from wave as a floats array
 int lua_GetWaveData(lua_State* L)
 {
-    // TODO: float *GetWaveData(Wave wave);
+    // TODO: return value should be a float array...
     
     Wave arg1 = LuaGetArgument_Wave(L, 1);
-    float * result = GetWaveData(arg1);
+    float *result = GetWaveData(arg1);
     //LuaPush_float(L, result);
-    //lua_pushnumber(L, result);
+    //LuaPush_float(L, result);
     return 0;
 }
 
 // Load music stream from file
 int lua_LoadMusicStream(lua_State* L)
 {
-    const char * arg1 = LuaGetArgument_string(L, 1);
+    const char *arg1 = LuaGetArgument_string(L, 1);
     Music result = LoadMusicStream((char *)arg1);
     LuaPush_Music(L, result);
     return 1;
@@ -3255,7 +3399,7 @@ int lua_IsMusicPlaying(lua_State* L)
 {
     Music arg1 = LuaGetArgument_Music(L, 1);
     bool result = IsMusicPlaying(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -3278,14 +3422,20 @@ int lua_SetMusicPitch(lua_State* L)
 }
 
 // Set music loop count (loop repeats)
-// TODO: void SetMusicLoopCount(Music music, float count);
+int lua_SetMusicLoopCount(lua_State* L)
+{
+    Music arg1 = LuaGetArgument_Music(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    SetMusicLoopCount(arg1, arg2);
+    return 0;
+}
 
 // Get music time length (in seconds)
 int lua_GetMusicTimeLength(lua_State* L)
 {
     Music arg1 = LuaGetArgument_Music(L, 1);
     float result = GetMusicTimeLength(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3294,7 +3444,7 @@ int lua_GetMusicTimePlayed(lua_State* L)
 {
     Music arg1 = LuaGetArgument_Music(L, 1);
     float result = GetMusicTimePlayed(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3312,10 +3462,10 @@ int lua_InitAudioStream(lua_State* L)
 // Update audio stream buffers with data
 int lua_UpdateAudioStream(lua_State* L)
 {
-    // TODO: void UpdateAudioStream(AudioStream stream, void *data, int numSamples);
+    // TODO: arg2 parameter is a void pointer...
     
     AudioStream arg1 = LuaGetArgument_AudioStream(L, 1);
-    void * arg2 = (char *)LuaGetArgument_string(L, 2);
+    void *arg2 = LuaGetArgument_ptr(L, 2);
     int arg3 = LuaGetArgument_int(L, 3);
     UpdateAudioStream(arg1, arg2, arg3);
     return 0;
@@ -3334,7 +3484,7 @@ int lua_IsAudioBufferProcessed(lua_State* L)
 {
     AudioStream arg1 = LuaGetArgument_AudioStream(L, 1);
     bool result = IsAudioBufferProcessed(arg1);
-    lua_pushboolean(L, result);
+    LuaPush_bool(L, result);
     return 1;
 }
 
@@ -3371,31 +3521,131 @@ int lua_ResumeAudioStream(lua_State* L)
 }
 
 //----------------------------------------------------------------------------------
+// Module Functions Definition - Utils math
+//----------------------------------------------------------------------------------
+int lua_Clamp(lua_State* L)
+{
+    float arg1 = LuaGetArgument_float(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    float result = Clamp(arg1, arg2, arg3);
+    LuaPush_float(L, result);
+    return 1;
+}
+
+//----------------------------------------------------------------------------------
+// Module Functions Definition - Vector2 math
+//----------------------------------------------------------------------------------
+int lua_Vector2Zero(lua_State* L)
+{
+    Vector2 result = Vector2Zero();
+    LuaPush_Vector2(L, result);
+    return 1;
+}
+
+int lua_Vector2One(lua_State* L)
+{
+    Vector2 result = Vector2One();
+    LuaPush_Vector2(L, result);
+    return 1;
+}
+
+int lua_Vector2Add(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    Vector2 result = Vector2Add(arg1, arg2);
+    LuaPush_Vector2(L, result);
+    return 1;
+}
+
+int lua_Vector2Subtract(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    Vector2 result = Vector2Subtract(arg1, arg2);
+    LuaPush_Vector2(L, result);
+    return 1;
+}
+
+int lua_Vector2Lenght(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float result = Vector2Lenght(arg1);
+    LuaPush_float(L, result);
+    return 1;
+}
+
+int lua_Vector2DotProduct(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float result = Vector2DotProduct(arg1, arg2);
+    LuaPush_float(L, result);
+    return 1;
+}
+
+int lua_Vector2Distance(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float result = Vector2Distance(arg1, arg2);
+    LuaPush_float(L, result);
+    return 1;
+}
+
+int lua_Vector2Angle(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float result = Vector2Angle(arg1, arg2);
+    LuaPush_float(L, result);
+    return 1;
+}
+
+int lua_Vector2Scale(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    Vector2Scale(&arg1, arg2);
+    LuaPush_Vector2(L, arg1);
+    return 1;
+}
+
+int lua_Vector2Negate(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2Negate(&arg1);
+    LuaPush_Vector2(L, arg1);
+    return 1;
+}
+
+int lua_Vector2Divide(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    Vector2Divide(&arg1, arg2);
+    LuaPush_Vector2(L, arg1);
+    return 1;
+}
+
+int lua_Vector2Normalize(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    Vector2Normalize(&arg1);
+    LuaPush_Vector2(L, arg1);
+    return 1;
+}
+
+//----------------------------------------------------------------------------------
 // raylib [raymath] module functions - Vector3 math
 //----------------------------------------------------------------------------------
-/* 
-RMDEF float Clamp(float value, float min, float max) 
-RMDEF Vector2 Vector2Zero(void)
-RMDEF Vector2 Vector2One(void)
-RMDEF Vector2 Vector2Add(Vector2 v1, Vector2 v2)
-RMDEF Vector2 Vector2Subtract(Vector2 v1, Vector2 v2)
-RMDEF float Vector2Lenght(Vector2 v)
-RMDEF float Vector2DotProduct(Vector2 v1, Vector2 v2)
-RMDEF float Vector2Distance(Vector2 v1, Vector2 v2)
-RMDEF float Vector2Angle(Vector2 v1, Vector2 v2)
-RMDEF void Vector2Scale(Vector2 *v, float scale)
-RMDEF void Vector2Negate(Vector2 *v)
-RMDEF void Vector2Divide(Vector2 *v, float div)
-RMDEF void Vector2Normalize(Vector2 *v)
-*/
-
 int lua_VectorZero(lua_State* L)
 {
     Vector3 result = VectorZero();
     LuaPush_Vector3(L, result);
     return 1;
 }
-
 
 int lua_VectorOne(lua_State* L)
 {
@@ -3444,7 +3694,7 @@ int lua_VectorDotProduct(lua_State* L)
     Vector3 arg1 = LuaGetArgument_Vector3(L, 1);
     Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
     float result = VectorDotProduct(arg1, arg2);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3452,7 +3702,7 @@ int lua_VectorLength(lua_State* L)
 {
     const Vector3 arg1 = LuaGetArgument_Vector3(L, 1);
     float result = VectorLength(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3486,7 +3736,7 @@ int lua_VectorDistance(lua_State* L)
     Vector3 arg1 = LuaGetArgument_Vector3(L, 1);
     Vector3 arg2 = LuaGetArgument_Vector3(L, 2);
     float result = VectorDistance(arg1, arg2);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3525,7 +3775,7 @@ int lua_MatrixDeterminant(lua_State* L)
 {
     Matrix arg1 = LuaGetArgument_Matrix(L, 1);
     float result = MatrixDeterminant(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3533,7 +3783,7 @@ int lua_MatrixTrace(lua_State* L)
 {
     Matrix arg1 = LuaGetArgument_Matrix(L, 1);
     float result = MatrixTrace(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3702,7 +3952,7 @@ int lua_QuaternionLength(lua_State* L)
 {
     Quaternion arg1 = LuaGetArgument_Quaternion(L, 1);
     float result = QuaternionLength(arg1);
-    lua_pushnumber(L, result);
+    LuaPush_float(L, result);
     return 1;
 }
 
@@ -3765,12 +4015,27 @@ int lua_QuaternionToAxisAngle(lua_State* L)
     float arg3 = 0;
     QuaternionToAxisAngle(arg1, &arg2, &arg3);
     LuaPush_Vector3(L, arg2);
-    lua_pushnumber(L, arg3);
+    LuaPush_float(L, arg3);
     return 2;
 }
 
-// TODO: Quaternion QuaternionFromEuler(float roll, float pitch, float yaw)
-// TODO: Vector3 QuaternionToEuler(Quaternion q)
+int lua_QuaternionFromEuler(lua_State* L)
+{
+    float arg1 = LuaGetArgument_float(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    Quaternion result = QuaternionFromEuler(arg1, arg2, arg3);
+    LuaPush_Quaternion(L, result);
+    return 1;
+}
+
+int lua_QuaternionToEuler(lua_State* L)
+{
+    Quaternion arg1 = LuaGetArgument_Quaternion(L, 1);
+    Vector3 result = QuaternionToEuler(arg1);
+    LuaPush_Vector3(L, result);
+    return 1;
+}
 
 int lua_QuaternionTransform(lua_State* L)
 {
@@ -3786,58 +4051,167 @@ int lua_QuaternionTransform(lua_State* L)
 //----------------------------------------------------------------------------------
 
 // Initializes physics values, pointers and creates physics loop thread
-// TODO: void InitPhysics(void);
+int lua_InitPhysics(lua_State* L)
+{
+    InitPhysics();
+    return 0;
+}
 
 // Returns true if physics thread is currently enabled
-// TODO: bool IsPhysicsEnabled(void);
+int lua_IsPhysicsEnabled(lua_State* L)
+{
+    bool result = IsPhysicsEnabled();
+    LuaPush_bool(L, result);
+    return 1;
+}
 
 // Sets physics global gravity force
-// TODO: void SetPhysicsGravity(float x, float y);
+int lua_SetPhysicsGravity(lua_State* L)
+{
+    float arg1 = LuaGetArgument_float(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    SetPhysicsGravity(arg1, arg2);
+    return 0;
+}
 
 // Creates a new circle physics body with generic parameters
-// TODO: PhysicsBody CreatePhysicsBodyCircle(Vector2 pos, float radius, float density);
+int lua_CreatePhysicsBodyCircle(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    PhysicsBody result = CreatePhysicsBodyCircle(arg1, arg2, arg3);
+    LuaPush_PhysicsBody(L, result);
+    return 1;
+}
 
 // Creates a new rectangle physics body with generic parameters
-// TODO: PhysicsBody CreatePhysicsBodyRectangle(Vector2 pos, float width, float height, float density);
+int lua_CreatePhysicsBodyRectangle(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    float arg4 = LuaGetArgument_float(L, 4);
+    PhysicsBody result = CreatePhysicsBodyRectangle(arg1, arg2, arg3, arg4);
+    LuaPush_PhysicsBody(L, result);
+    return 1;
+}
 
 // Creates a new polygon physics body with generic parameters
-// TODO: PhysicsBody CreatePhysicsBodyPolygon(Vector2 pos, float radius, int sides, float density);
+int lua_CreatePhysicsBodyPolygon(lua_State* L)
+{
+    Vector2 arg1 = LuaGetArgument_Vector2(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    int arg3 = LuaGetArgument_int(L, 3);
+    float arg4 = LuaGetArgument_float(L, 4);
+    PhysicsBody result = CreatePhysicsBodyPolygon(arg1, arg2, arg3, arg4);
+    LuaPush_PhysicsBody(L, result);
+    return 1;
+}
 
 // Adds a force to a physics body
-// TODO: void PhysicsAddForce(PhysicsBody body, Vector2 force);
+int lua_PhysicsAddForce(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    PhysicsAddForce(arg1, arg2);
+    return 0;
+}
 
 // Adds an angular force to a physics body
-// TODO: void PhysicsAddTorque(PhysicsBody body, float amount);
+int lua_PhysicsAddTorque(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    PhysicsAddTorque(arg1, arg2);
+    return 0;
+}
 
 // Shatters a polygon shape physics body to little physics bodies with explosion force
-// TODO: void PhysicsShatter(PhysicsBody body, Vector2 position, float force);
+int lua_PhysicsShatter(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    PhysicsShatter(arg1, arg2, arg3);
+    return 0;
+}
 
 // Returns the current amount of created physics bodies
-// TODO: int GetPhysicsBodiesCount(void);
+int lua_GetPhysicsBodiesCount(lua_State* L)
+{
+    int result = GetPhysicsBodiesCount();
+    LuaPush_int(L, result);
+    return 1;
+}
 
 // Returns a physics body of the bodies pool at a specific index
-// TODO: PhysicsBody GetPhysicsBody(int index);
+int lua_GetPhysicsBody(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    PhysicsBody result = GetPhysicsBody(arg1);
+    LuaPush_PhysicsBody(L, result);
+    return 1;
+}
 
 // Returns the physics body shape type (PHYSICS_CIRCLE or PHYSICS_POLYGON)
-// TODO: int GetPhysicsShapeType(int index);
+int lua_GetPhysicsShapeType(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    int result = GetPhysicsShapeType(arg1);
+    LuaPush_int(L, result);
+    return 1;
+}
 
 // Returns the amount of vertices of a physics body shape
-// TODO: int GetPhysicsShapeVerticesCount(int index);
+int lua_GetPhysicsShapeVerticesCount(lua_State* L)
+{
+    int arg1 = LuaGetArgument_int(L, 1);
+    int result = GetPhysicsShapeVerticesCount(arg1);
+    LuaPush_int(L, result);
+    return 1;
+}
 
 // Returns transformed position of a body shape (body position + vertex transformed position)
-// TODO: Vector2 GetPhysicsShapeVertex(PhysicsBody body, int vertex);
+int lua_GetPhysicsShapeVertex(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    int arg2 = LuaGetArgument_int(L, 2);
+    Vector2 result = GetPhysicsShapeVertex(arg1, arg2);
+    LuaPush_Vector2(L, result);
+    return 1;
+}
 
 // Sets physics body shape transform based on radians parameter
-// TODO: void SetPhysicsBodyRotation(PhysicsBody body, float radians);
+int lua_SetPhysicsBodyRotation(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    float arg2 = LuaGetArgument_float(L, 2);
+    SetPhysicsBodyRotation(arg1, arg2);
+    return 0;
+}
 
 // Unitializes and destroy a physics body
-// TODO: void DestroyPhysicsBody(PhysicsBody body);
+int lua_DestroyPhysicsBody(lua_State* L)
+{
+    PhysicsBody arg1 = LuaGetArgument_PhysicsBody(L, 1);
+    DestroyPhysicsBody(arg1);
+    return 0;
+}
 
 // Destroys created physics bodies and manifolds and resets global values
-// TODO: void ResetPhysics(void);
+int lua_ResetPhysics(lua_State* L)
+{
+    ResetPhysics();
+    return 0;
+}
 
 // Unitializes physics pointers and closes physics loop thread
-// TODO: void ClosePhysics(void);
+int lua_ClosePhysics(lua_State* L)
+{
+    ClosePhysics();
+    return 0;
+}
 
 //----------------------------------------------------------------------------------
 // Functions Registering
@@ -4184,7 +4558,7 @@ static luaL_Reg raylib_functions[] = {
     REG(StopAudioStream)
 
     // [raymath] module functions - general
-    REG(Clamp(float value, float min, float max)
+    REG(Clamp)
     
     // [raymath] module functions - Vector2
     REG(Vector2Zero)
@@ -4252,7 +4626,6 @@ static luaL_Reg raylib_functions[] = {
     REG(QuaternionTransform)
     
     // [physac] module functions
-/*
     REG(InitPhysics)
     REG(IsPhysicsEnabled)
     REG(SetPhysicsGravity)
@@ -4271,7 +4644,6 @@ static luaL_Reg raylib_functions[] = {
     REG(DestroyPhysicsBody)
     REG(ResetPhysics)
     REG(ClosePhysics)
-*/
 
     { NULL, NULL }  // sentinel: end signal
 };
@@ -4540,7 +4912,7 @@ RLUADEF void InitLuaDevice(void)
     LuaSetEnum("OTHER", OTHER);
     lua_pop(L, 1);
 
-    lua_pushboolean(L, true);
+    LuaPush_bool(L, true);
 #if defined(PLATFORM_DESKTOP)
     lua_setglobal(L, "PLATFORM_DESKTOP");
 #elif defined(PLATFORM_ANDROID)
@@ -4608,4 +4980,24 @@ RLUADEF void ExecuteLuaFile(const char *filename)
     }
 }
 
+RLUADEF void SetLuaPath(const char *path)
+{
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "path");    // Get field "path" from table at top of stack (-1)
+    
+    char *currentPath = lua_tostring(L, -1); // Grab path string from top of stack
+    
+    char *newPath = (char *)malloc(strlen(currentPath) + strlen(path) + 9);                                         
+    strcpy(newPath, currentPath);                                                                      
+    strcat(newPath, ";");                                                                           
+    strcat(newPath, path);                                                                          
+    strcat(newPath, "?.lua;"); 
+    
+    lua_pop(L, 1);  // Get rid of the string on the stack we just pushed
+    lua_pushstring(L, newPath);     // Push the new path
+    lua_setfield(L, -2, "path");    // Set the field "path" in table at -2 with value at top of stack
+    lua_pop(L, 1);  // Get rid of package table from top of stack
+    
+    free(newPath);
+}
 #endif // RLUA_IMPLEMENTATION
