@@ -7,7 +7,7 @@
 *   Compile example using:
 *   gcc -o rlua_tester.exe rlua_tester.c -s ../src/rlua_icon                /
 *       -I../src -I../src/external/lua/include -L../src/external/lua/lib    /
-*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53      /
+*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53 -lpthread -static     /
 *       -std=c99 -Wl,-allow-multiple-definition -Wl,--subsystem,windows
 *
 *   This example has been created using raylib 1.7 (www.raylib.com)
@@ -46,7 +46,7 @@ int main()
     // ExecuteLuaFile("core/core_3d_camera_first_person.lua");
     // ExecuteLuaFile("core/core_2d_camera.lua");
     // ExecuteLuaFile("core/core_world_screen.lua");
-    // ExecuteLuaFile("core/core_vr_simulator.lua");
+    // ExecuteLuaFile("core/core_vr_simulator.lua");                // ERROR: Lua Error: attempt to index a nil value
     
     // [shapes] module examples
     // ExecuteLuaFile("shapes/shapes_logo_raylib.lua");
@@ -56,11 +56,12 @@ int main()
     // ExecuteLuaFile("shapes/shapes_lines_bezier.lua");
     
     // [textures] module examples
+    //SetLuaPath("/textures/");     // Doesn't work!!!
     // ExecuteLuaFile("textures/textures_logo_raylib.lua");
     // ExecuteLuaFile("textures/textures_image_loading.lua");
     // ExecuteLuaFile("textures/textures_image_drawing.lua");
     // ExecuteLuaFile("textures/textures_image_processing.lua");    // ERROR: GetImageData() --> UpdateTexture()
-    // ExecuteLuaFile("textures/textures_rectangle.lua");
+    ExecuteLuaFile("textures/textures_rectangle.lua");              // Can not find texture, relative path ISSUE!
     // ExecuteLuaFile("textures/textures_srcrec_dstrec.lua");
     // ExecuteLuaFile("textures/textures_to_image.lua");
     // ExecuteLuaFile("textures/textures_raw_data.lua");            // ERROR: LoadImageEx()
@@ -74,7 +75,7 @@ int main()
     // ExecuteLuaFile("text_writing_anim.lua");
     // ExecuteLuaFile("text_ttf_loading.lua");
     // ExecuteLuaFile("text_bmfont_unordered.lua");
-    ExecuteLuaFile("text/text_input_box.lua");
+    //ExecuteLuaFile("text/text_input_box.lua");          // CRASH
     
     // [models] module examples
     // ExecuteLuaFile("models_geometric_shapes.lua");
