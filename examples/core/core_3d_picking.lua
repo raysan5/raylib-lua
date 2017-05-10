@@ -18,7 +18,7 @@ InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking")
 
 -- Define the camera to look into our 3d world
 local camera = {}
-camera.position = Vector3(0.0, 10.0, 10.0)  -- Camera position
+camera.position = Vector3(10.0, 10.0, 10.0)  -- Camera position
 camera.target = Vector3(0.0, 0.0, 0.0)      -- Camera looking at point
 camera.up = Vector3(0.0, 1.0, 0.0)          -- Camera up vector (rotation towards target)
 camera.fovy = 45.0                          -- Camera field-of-view Y

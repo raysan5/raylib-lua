@@ -17,7 +17,7 @@ local screenHeight = 450
 InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera free")
 
 -- Define the camera to look into our 3d world
-local camera = Camera(Vector3(0.0, 10.0, 10.0), Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), 45.0)
+local camera = Camera(Vector3(10.0, 10.0, 10.0), Vector3(0.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), 45.0)
 
 local cubePosition = Vector3(0.0, 0.0, 0.0)
 
