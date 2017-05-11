@@ -26,7 +26,6 @@ local mouseOnText = false
 
 local framesCounter = 0
 
-
 SetTargetFPS(60)       -- Set target frames-per-second
 -------------------------------------------------------------------------------------------
 

@@ -1145,7 +1145,8 @@ int lua_TraceLog(lua_State* L)
 // Takes a screenshot and saves it in the same folder as executable
 int lua_TakeScreenshot(lua_State* L)
 {
-    TakeScreenshot();
+    const char *arg1 = LuaGetArgument_string(L, 1);
+    TakeScreenshot(arg1);
     return 0;
 }
 
