@@ -90,7 +90,6 @@ RLUADEF void InitLuaDevice(void);                   // Initialize Lua system
 RLUADEF void ExecuteLuaCode(const char *code);      // Execute raylib Lua code
 RLUADEF void ExecuteLuaFile(const char *filename);  // Execute raylib Lua script
 RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
-RLUADEF void SetLuaPath(const char *path);          // Set working Lua directory
 
 /***********************************************************************************
 *
@@ -4979,26 +4978,5 @@ RLUADEF void ExecuteLuaFile(const char *filename)
         case LUA_ERRMEM: TraceLog(ERROR, "Lua Memory Error: %s", lua_tostring(L, -1));
         default: TraceLog(ERROR, "Lua Error: %s", lua_tostring(L, -1));
     }
-}
-
-RLUADEF void SetLuaPath(const char *path)
-{
-    lua_getglobal(L, "package");
-    lua_getfield(L, -1, "path");    // Get field "path" from table at top of stack (-1)
-    
-    char *currentPath = lua_tostring(L, -1); // Grab path string from top of stack
-    
-    char *newPath = (char *)malloc(strlen(currentPath) + strlen(path) + 9);                                         
-    strcpy(newPath, currentPath);                                                                      
-    strcat(newPath, ";");                                                                           
-    strcat(newPath, path);                                                                          
-    strcat(newPath, "?.lua;"); 
-    
-    lua_pop(L, 1);  // Get rid of the string on the stack we just pushed
-    lua_pushstring(L, newPath);     // Push the new path
-    lua_setfield(L, -2, "path");    // Set the field "path" in table at -2 with value at top of stack
-    lua_pop(L, 1);  // Get rid of package table from top of stack
-    
-    free(newPath);
 }
 #endif // RLUA_IMPLEMENTATION
