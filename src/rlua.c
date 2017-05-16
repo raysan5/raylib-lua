@@ -59,15 +59,77 @@ int main(int argc, char *argv[])
         if (IsFileExtension(argv[1], ".lua"))
         {
             InitLuaDevice();            // Initialize lua device
-            
             ExecuteLuaFile(argv[1]);    // Execute lua program (argument file)
-
             CloseLuaDevice();           // Close Lua device and free resources
         }
     }
     else
-    {
-        // TODO: Create raylib window interface supporting Lua file drag&drop and additional options    
+    {      
+        // Initialization
+        //--------------------------------------------------------------------------------------
+        int screenWidth = 800;
+        int screenHeight = 450;
+
+        InitWindow(screenWidth, screenHeight, "rLua - raylib Lua launcher");
+        
+        // NOTE: Drag and drop support only available for desktop platforms: Windows, Linux, OSX
+        int count = 0;
+        char **droppedFiles;
+        char luaFileToLoad[256];
+
+        bool runLuaFile = false;
+        
+        SetTargetFPS(60);
+        //--------------------------------------------------------------------------------------
+        
+        while (!WindowShouldClose() && !runLuaFile)
+        {
+            // Update
+            //----------------------------------------------------------------------------------
+
+            // Load a dropped Lua file dynamically
+            if (IsFileDropped())
+            {
+                droppedFiles = GetDroppedFiles(&count);
+                
+                if (count == 1) // Only support one Lua file dropped
+                {
+                    runLuaFile = true;
+
+                    strcpy(fileToLoad, droppedFiles[0]);
+                    ClearDroppedFiles();
+                }
+            }
+            //----------------------------------------------------------------------------------
+        
+            // Draw
+            //----------------------------------------------------------------------------------
+            BeginDrawing();
+            
+                ClearBackground(RAYWHITE);
+                
+                DrawText("rLua - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
+                DrawText("rLua v1.0", 10, 430, 10, GRAY);
+                DrawText("<drag & drop raylib Lua file here>", 230, 180, 20, GRAY);
+            
+            EndDrawing();
+            //----------------------------------------------------------------------------------
+        }
+        
+        // De-Initialization
+        //--------------------------------------------------------------------------------------
+        ClearDroppedFiles();        // Clear internal buffers
+
+        CloseWindow();              // Close window and OpenGL context
+        //--------------------------------------------------------------------------------------
+        
+        if (runLuaFile)
+        {
+            InitLuaDevice();            // Initialize lua device
+            ChangeDirectory(GetDirectoryPath(luaFileToLoad));
+            ExecuteLuaFile(luaFileToLoad);
+            CloseLuaDevice();           // Close Lua device and free resources
+        }
     }
 
     return 0;
