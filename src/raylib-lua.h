@@ -1,6 +1,6 @@
 /**********************************************************************************************
 *
-*   rlua v1.7 - raylib Lua bindings for raylib v1.7
+*   raylib-lua v1.7 - raylib Lua bindings for raylib v1.7
 *
 *   NOTES:
 *

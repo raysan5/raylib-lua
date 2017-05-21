@@ -43,9 +43,7 @@
 #include "raylib.h"             // raylib library
 
 #define RLUA_IMPLEMENTATION
-#include "rlua.h"               // raylib Lua binding
-
-#include <string.h>             // Required for: strcmp()
+#include "raylib-lua.h"         // raylib Lua binding
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -96,7 +94,7 @@ int main(int argc, char *argv[])
                 {
                     runLuaFile = true;
 
-                    strcpy(fileToLoad, droppedFiles[0]);
+                    strcpy(luaFileToLoad, droppedFiles[0]);
                     ClearDroppedFiles();
                 }
             }

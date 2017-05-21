@@ -20,7 +20,7 @@
 #include "raylib.h"
 
 #define RLUA_IMPLEMENTATION
-#include "rlua.h"               // raylib Lua binding
+#include "raylib-lua.h"               // raylib Lua binding
 
 int main()
 {
