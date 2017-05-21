@@ -62,71 +62,80 @@ int main(int argc, char *argv[])
         }
     }
     else
-    {      
-        // Initialization
-        //--------------------------------------------------------------------------------------
-        int screenWidth = 800;
-        int screenHeight = 450;
-
-        InitWindow(screenWidth, screenHeight, "rLua - raylib Lua launcher");
+    {
+        bool launcherShouldClose = false;
         
-        // NOTE: Drag and drop support only available for desktop platforms: Windows, Linux, OSX
-        int count = 0;
-        char **droppedFiles;
-        char luaFileToLoad[256];
-
-        bool runLuaFile = false;
-        
-        SetTargetFPS(60);
-        //--------------------------------------------------------------------------------------
-        
-        while (!WindowShouldClose() && !runLuaFile)
+        while (!launcherShouldClose)
         {
-            // Update
-            //----------------------------------------------------------------------------------
+            // Initialization
+            //--------------------------------------------------------------------------------------
+            int screenWidth = 800;
+            int screenHeight = 450;
 
-            // Load a dropped Lua file dynamically
-            if (IsFileDropped())
+            InitWindow(screenWidth, screenHeight, "rLua - raylib Lua launcher");
+            
+            // NOTE: Drag and drop support only available for desktop platforms: Windows, Linux, OSX
+            int count = 0;
+            char **droppedFiles;
+            char luaFileToLoad[256];
+
+            bool runLuaFile = false;
+            
+            SetTargetFPS(60);
+            //--------------------------------------------------------------------------------------
+            
+            while (!WindowShouldClose() && !runLuaFile)
             {
-                droppedFiles = GetDroppedFiles(&count);
-                
-                if (count == 1) // Only support one Lua file dropped
+                // Update
+                //----------------------------------------------------------------------------------
+
+                // Load a dropped Lua file dynamically
+                if (IsFileDropped())
                 {
-                    runLuaFile = true;
+                    droppedFiles = GetDroppedFiles(&count);
+                    
+                    if (count == 1) // Only support one Lua file dropped
+                    {
+                        runLuaFile = true;
 
-                    strcpy(luaFileToLoad, droppedFiles[0]);
-                    ClearDroppedFiles();
+                        strcpy(luaFileToLoad, droppedFiles[0]);
+                        ClearDroppedFiles();
+                    }
                 }
-            }
-            //----------------------------------------------------------------------------------
-        
-            // Draw
-            //----------------------------------------------------------------------------------
-            BeginDrawing();
+                //----------------------------------------------------------------------------------
             
-                ClearBackground(RAYWHITE);
+                // Draw
+                //----------------------------------------------------------------------------------
+                BeginDrawing();
                 
-                DrawText("rLua - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
-                DrawText("rLua v1.0", 10, 430, 10, GRAY);
-                DrawText("<drag & drop raylib Lua file here>", 230, 180, 20, GRAY);
+                    ClearBackground(RAYWHITE);
+                    
+                    DrawText("rLua - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
+                    DrawText("rLua v1.0", 10, 430, 10, GRAY);
+                    DrawText("<drag & drop raylib Lua file here>", 230, 180, 20, GRAY);
+                
+                EndDrawing();
+                //----------------------------------------------------------------------------------
+            }
             
-            EndDrawing();
-            //----------------------------------------------------------------------------------
-        }
-        
-        // De-Initialization
-        //--------------------------------------------------------------------------------------
-        ClearDroppedFiles();        // Clear internal buffers
-
-        CloseWindow();              // Close window and OpenGL context
-        //--------------------------------------------------------------------------------------
-        
-        if (runLuaFile)
-        {
-            InitLuaDevice();            // Initialize lua device
-            ChangeDirectory(GetDirectoryPath(luaFileToLoad));
-            ExecuteLuaFile(luaFileToLoad);
-            CloseLuaDevice();           // Close Lua device and free resources
+            // De-Initialization
+            //--------------------------------------------------------------------------------------
+            ClearDroppedFiles();                // Clear internal buffers
+            
+            CloseWindow();                      // Close window and OpenGL context
+            //--------------------------------------------------------------------------------------
+            
+            launcherShouldClose = true;         // Close launcher if no Lua file loaded
+            
+            if (runLuaFile)
+            {
+                InitLuaDevice();                // Initialize lua device
+                ChangeDirectory(GetDirectoryPath(luaFileToLoad));
+                ExecuteLuaFile(luaFileToLoad);
+                CloseLuaDevice();               // Close Lua device and free resources
+                
+                launcherShouldClose = false;    // Return to launcher to load another Lua file
+            }
         }
     }
 
