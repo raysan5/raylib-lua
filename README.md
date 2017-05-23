@@ -4,13 +4,14 @@
 
 Lua bindings for raylib, a simple and easy-to-use library to learn videogames programming (www.raylib.com)
 
-raylib-lua binding is self-contained in a header-only single file: [rlua.h](src/rlua.h). Just include that file
+raylib-lua binding is self-contained in a header-only single file: [raylib-lua.h](src/raylib-lua.h). Just include that file
 in your project to allow loading and execution of raylib code written in Lua. Check [code examples](examples) for reference.
 
-Together with the binding, raylib-lua launcher is also provided: [rlua](src/rlua.c). This launcher allows to run raylib-lua
-programs from command line, or just *drag&drop* .lua files into *rlua.exe*.
+Together with the binding, a raylib-lua launcher is also provided: [rlua](src/rlua.c). This launcher allows to run raylib-lua
+programs from command line, or just with *drag & drop* of .lua files into *rlua.exe*.
 
-Note that launcher can also be compiled for other platforms, just need to link with Lua library and raylib library.
+Note that launcher can also be compiled for other platforms, just need to link with Lua library and raylib library. 
+For more details, just check comments on [rlua](src/rlua.c).
 
 # License
 
