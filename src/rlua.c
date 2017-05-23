@@ -96,11 +96,15 @@ int main(int argc, char *argv[])
                     
                     if (count == 1) // Only support one Lua file dropped
                     {
-                        runLuaFile = true;
-
-                        strcpy(luaFileToLoad, droppedFiles[0]);
-                        ClearDroppedFiles();
+                        if (IsFileExtension(droppedFiles[0], ".lua"))
+                        {
+                            runLuaFile = true;
+                            strcpy(luaFileToLoad, droppedFiles[0]);
+                        }
+                        else TraceLog(WARNING, "[%s] Fileformat not supported", droppedFiles[0]);
                     }
+                    
+                    ClearDroppedFiles();
                 }
                 //----------------------------------------------------------------------------------
             
@@ -112,7 +116,7 @@ int main(int argc, char *argv[])
                     
                     DrawText("rLua - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
                     DrawText("rLua v1.0", 10, 430, 10, GRAY);
-                    DrawText("<drag & drop raylib Lua file here>", 230, 180, 20, GRAY);
+                    DrawText("< drag & drop raylib Lua file here >", 230, 180, 20, GRAY);
                 
                 EndDrawing();
                 //----------------------------------------------------------------------------------
@@ -129,12 +133,20 @@ int main(int argc, char *argv[])
             
             if (runLuaFile)
             {
+                TraceLog(INFO, "------------------------------------");
+                TraceLog(INFO, "Loading Lua file: %s", luaFileToLoad);
+                TraceLog(INFO, "------------------------------------");
+                
                 InitLuaDevice();                // Initialize lua device
                 ChangeDirectory(GetDirectoryPath(luaFileToLoad));
                 ExecuteLuaFile(luaFileToLoad);
                 CloseLuaDevice();               // Close Lua device and free resources
                 
                 launcherShouldClose = false;    // Return to launcher to load another Lua file
+                
+                TraceLog(INFO, "------------------------------------");
+                TraceLog(INFO, "Closing Lua file...");
+                TraceLog(INFO, "------------------------------------");
             }
         }
     }
