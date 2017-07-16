@@ -1731,8 +1731,8 @@ int lua_DrawRectanglePro(lua_State* L)
 {
     Rectangle arg1 = LuaGetArgument_Rectangle(L, 1);
     Vector2 arg2 = LuaGetArgument_Vector2(L, 2);
-    float arg3 = LuaGetArgument_float(L, 2);
-    Color arg4 = LuaGetArgument_Color(L, 2);
+    float arg3 = LuaGetArgument_float(L, 3);
+    Color arg4 = LuaGetArgument_Color(L, 4);
     DrawRectanglePro(arg1, arg2, arg3, arg4);
     return 0;
 }
