@@ -115,30 +115,30 @@ RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define LuaPush_int(L, value)       lua_pushinteger(L, value)
-#define LuaPush_float(L, value)     lua_pushnumber(L, value);
-#define LuaPush_bool(L, value)      lua_pushboolean(L, value)
-#define LuaPush_string(L, value)    lua_pushstring(L, value)
+#define LuaPush_int(L, value)           lua_pushinteger(L, value)
+#define LuaPush_float(L, value)         lua_pushnumber(L, value);
+#define LuaPush_bool(L, value)          lua_pushboolean(L, value)
+#define LuaPush_string(L, value)        lua_pushstring(L, value)
 
-#define LuaPush_Image(L, img)       LuaPushOpaqueTypeWithMetatable(L, img, Image)
-#define LuaPush_Texture2D(L, tex)   LuaPushOpaqueTypeWithMetatable(L, tex, Texture2D)
+#define LuaPush_Image(L, img)           LuaPushOpaqueTypeWithMetatable(L, img, Image)
+#define LuaPush_Texture2D(L, tex)       LuaPushOpaqueTypeWithMetatable(L, tex, Texture2D)
 #define LuaPush_RenderTexture2D(L, tex) LuaPushOpaqueTypeWithMetatable(L, tex, RenderTexture2D)
-#define LuaPush_SpriteFont(L, sf)   LuaPushOpaqueTypeWithMetatable(L, sf, SpriteFont)
-#define LuaPush_Mesh(L, vd)         LuaPushOpaqueType(L, vd)
-#define LuaPush_Shader(L, s)        LuaPushOpaqueType(L, s)
-#define LuaPush_Sound(L, snd)       LuaPushOpaqueType(L, snd)
-#define LuaPush_Wave(L, wav)        LuaPushOpaqueType(L, wav)
-#define LuaPush_Music(L, mus)       LuaPushOpaqueType(L, mus)
-#define LuaPush_AudioStream(L, aud) LuaPushOpaqueType(L, aud)
+#define LuaPush_SpriteFont(L, sf)       LuaPushOpaqueTypeWithMetatable(L, sf, SpriteFont)
+#define LuaPush_Mesh(L, vd)             LuaPushOpaqueType(L, vd)
+#define LuaPush_Shader(L, s)            LuaPushOpaqueType(L, s)
+#define LuaPush_Sound(L, snd)           LuaPushOpaqueType(L, snd)
+#define LuaPush_Wave(L, wav)            LuaPushOpaqueType(L, wav)
+#define LuaPush_Music(L, mus)           LuaPushOpaqueType(L, mus)
+#define LuaPush_AudioStream(L, aud)     LuaPushOpaqueType(L, aud)
 #define LuaPush_PhysicsBody(L, body)    LuaPushOpaqueType(L, body)
 
-#define LuaGetArgument_string       luaL_checkstring
-#define LuaGetArgument_ptr          (void *)luaL_checkinteger
-#define LuaGetArgument_int          (int)luaL_checkinteger
-#define LuaGetArgument_unsigned     (unsigned)luaL_checkinteger
-#define LuaGetArgument_char         (char)luaL_checkinteger
-#define LuaGetArgument_float        (float)luaL_checknumber
-#define LuaGetArgument_double       luaL_checknumber
+#define LuaGetArgument_ptr              (void *)luaL_checkinteger
+#define LuaGetArgument_int              (int)luaL_checkinteger
+#define LuaGetArgument_unsigned         (unsigned)luaL_checkinteger
+#define LuaGetArgument_char             (char)luaL_checkinteger
+#define LuaGetArgument_float            (float)luaL_checknumber
+#define LuaGetArgument_double           luaL_checknumber
+#define LuaGetArgument_string           luaL_checkstring
 
 #define LuaGetArgument_Image(L, img)        *(Image *)LuaGetArgumentOpaqueTypeWithMetatable(L, img, "Image")
 #define LuaGetArgument_Texture2D(L, tex)    *(Texture2D *)LuaGetArgumentOpaqueTypeWithMetatable(L, tex, "Texture2D")
@@ -241,16 +241,13 @@ static int LuaIndexImage(lua_State* L)
 {
     Image img = LuaGetArgument_Image(L, 1);
     const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "width"))
-        LuaPush_int(L, img.width);
-    else if (!strcmp(key, "height"))
-        LuaPush_int(L, img.height);
-    else if (!strcmp(key, "mipmaps"))
-        LuaPush_int(L, img.mipmaps);
-    else if (!strcmp(key, "format"))
-        LuaPush_int(L, img.format);
-    else
-        return 0;
+    
+    if (!strcmp(key, "width")) LuaPush_int(L, img.width);
+    else if (!strcmp(key, "height")) LuaPush_int(L, img.height);
+    else if (!strcmp(key, "mipmaps")) LuaPush_int(L, img.mipmaps);
+    else if (!strcmp(key, "format")) LuaPush_int(L, img.format);
+    else return 0;
+    
     return 1;
 }
 
@@ -258,18 +255,14 @@ static int LuaIndexTexture2D(lua_State* L)
 {
     Texture2D img = LuaGetArgument_Texture2D(L, 1);
     const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "width"))
-        LuaPush_int(L, img.width);
-    else if (!strcmp(key, "height"))
-        LuaPush_int(L, img.height);
-    else if (!strcmp(key, "mipmaps"))
-        LuaPush_int(L, img.mipmaps);
-    else if (!strcmp(key, "format"))
-        LuaPush_int(L, img.format);
-    else if (!strcmp(key, "id"))
-        LuaPush_int(L, img.id);
-    else
-        return 0;
+    
+    if (!strcmp(key, "width")) LuaPush_int(L, img.width);
+    else if (!strcmp(key, "height")) LuaPush_int(L, img.height);
+    else if (!strcmp(key, "mipmaps")) LuaPush_int(L, img.mipmaps);
+    else if (!strcmp(key, "format")) LuaPush_int(L, img.format);
+    else if (!strcmp(key, "id")) LuaPush_int(L, img.id);
+    else return 0;
+
     return 1;
 }
 
@@ -277,12 +270,11 @@ static int LuaIndexRenderTexture2D(lua_State* L)
 {
     RenderTexture2D img = LuaGetArgument_RenderTexture2D(L, 1);
     const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "texture"))
-        LuaPush_Texture2D(L, img.texture);
-    else if (!strcmp(key, "depth"))
-        LuaPush_Texture2D(L, img.depth);
-    else
-        return 0;
+    
+    if (!strcmp(key, "texture")) LuaPush_Texture2D(L, img.texture);
+    else if (!strcmp(key, "depth")) LuaPush_Texture2D(L, img.depth);
+    else return 0;
+    
     return 1;
 }
 
@@ -290,14 +282,12 @@ static int LuaIndexSpriteFont(lua_State* L)
 {
     SpriteFont img = LuaGetArgument_SpriteFont(L, 1);
     const char *key = luaL_checkstring(L, 2);
-    if (!strcmp(key, "baseSize"))
-        LuaPush_int(L, img.baseSize);
-    else if (!strcmp(key, "texture"))
-        LuaPush_Texture2D(L, img.texture);
-    else if (!strcmp(key, "charsCount"))
-        LuaPush_int(L, img.charsCount);
-    else
-        return 0;
+    
+    if (!strcmp(key, "baseSize")) LuaPush_int(L, img.baseSize);
+    else if (!strcmp(key, "texture")) LuaPush_Texture2D(L, img.texture);
+    else if (!strcmp(key, "charsCount")) LuaPush_int(L, img.charsCount);
+    else return 0;
+    
     return 1;
 }
 
@@ -471,7 +461,7 @@ static Matrix LuaGetArgument_Matrix(lua_State* L, int index)
 static Material LuaGetArgument_Material(lua_State* L, int index)
 {
     Material result;
-        index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
     luaL_argcheck(L, lua_getfield(L, index, "shader") == LUA_TUSERDATA, index, "Expected Material");
     result.shader = LuaGetArgument_Shader(L, -1);
     luaL_argcheck(L, lua_getfield(L, index, "texDiffuse") == LUA_TUSERDATA, index, "Expected Material");
