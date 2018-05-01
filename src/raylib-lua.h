@@ -167,24 +167,27 @@ static lua_State* L = 0;
 static void LuaPush_Color(lua_State* L, Color color);
 static void LuaPush_Vector2(lua_State* L, Vector2 vec);
 static void LuaPush_Vector3(lua_State* L, Vector3 vec);
+static void LuaPush_Vector4(lua_State* L, Vector4 vec);
 static void LuaPush_Quaternion(lua_State* L, Quaternion vec);
 static void LuaPush_Matrix(lua_State* L, Matrix *matrix);
 static void LuaPush_Rectangle(lua_State* L, Rectangle rect);
+static void LuaPush_Camera(lua_State* L, Camera cam);
+static void LuaPush_Camera2D(lua_State* L, Camera2D cam);
 static void LuaPush_Model(lua_State* L, Model mdl);
 static void LuaPush_Ray(lua_State* L, Ray ray);
 static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo hit);
-static void LuaPush_Camera(lua_State* L, Camera cam);
 
+static Color LuaGetArgument_Color(lua_State* L, int index);
 static Vector2 LuaGetArgument_Vector2(lua_State* L, int index);
 static Vector3 LuaGetArgument_Vector3(lua_State* L, int index);
+static Vector4 LuaGetArgument_Vector4(lua_State* L, int index);
 static Quaternion LuaGetArgument_Quaternion(lua_State* L, int index);
-static Color LuaGetArgument_Color(lua_State* L, int index);
+static Matrix LuaGetArgument_Matrix(lua_State* L, int index);
 static Rectangle LuaGetArgument_Rectangle(lua_State* L, int index);
 static Camera LuaGetArgument_Camera(lua_State* L, int index);
 static Camera2D LuaGetArgument_Camera2D(lua_State* L, int index);
-static Ray LuaGetArgument_Ray(lua_State* L, int index);
-static Matrix LuaGetArgument_Matrix(lua_State* L, int index);
 static Model LuaGetArgument_Model(lua_State* L, int index);
+static Ray LuaGetArgument_Ray(lua_State* L, int index);
 
 //----------------------------------------------------------------------------------
 // rlua Helper Functions
@@ -357,6 +360,21 @@ static Quaternion LuaGetArgument_Quaternion(lua_State* L, int index)
     return (Quaternion) { x, y, z, w };
 }
 
+static Matrix LuaGetArgument_Matrix(lua_State* L, int index)
+{
+    Matrix result = { 0 };
+    float* ptr = &result.m0;
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+
+    for (int i = 0; i < 16; i++)
+    {
+        lua_geti(L, index, i+1);
+        ptr[i] = luaL_checknumber(L, -1);
+    }
+    lua_pop(L, 16);
+    return result;
+}
+
 static Color LuaGetArgument_Color(lua_State* L, int index)
 {
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
@@ -440,21 +458,6 @@ static Ray LuaGetArgument_Ray(lua_State* L, int index)
     luaL_argcheck(L, lua_getfield(L, index, "direction") == LUA_TTABLE, index, "Expected Ray");
     result.direction = LuaGetArgument_Vector3(L, -1);
     lua_pop(L, 2);
-    return result;
-}
-
-static Matrix LuaGetArgument_Matrix(lua_State* L, int index)
-{
-    Matrix result = { 0 };
-    float* ptr = &result.m0;
-    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-
-    for (int i = 0; i < 16; i++)
-    {
-        lua_geti(L, index, i+1);
-        ptr[i] = luaL_checknumber(L, -1);
-    }
-    lua_pop(L, 16);
     return result;
 }
 

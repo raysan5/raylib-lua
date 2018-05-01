@@ -1,3 +1,52 @@
+//----------------------------------------------------------------------------------
+// Structures Definition
+//----------------------------------------------------------------------------------
+
+// Vector3 type
+typedef struct Vector3 {
+    float x;
+    float y;
+    float z;
+} Vector3;
+
+// RenderTexture2D type, for texture rendering
+typedef struct RenderTexture2D {
+    unsigned int id;        // OpenGL Framebuffer Object (FBO) id
+    Texture2D texture;      // Color buffer attachment texture
+    Texture2D depth;        // Depth buffer attachment texture
+} RenderTexture2D;
+
+// SpriteFont type, includes texture and charSet array data
+typedef struct SpriteFont {
+    Texture2D texture;      // Font texture
+    int baseSize;           // Base size (default chars height)
+    int charsCount;         // Number of characters
+    CharInfo *chars;        // Characters info data
+} SpriteFont;
+
+// Bounding box type
+typedef struct BoundingBox {
+    Vector3 min;            // Minimum vertex box-corner
+    Vector3 max;            // Maximum vertex box-corner
+} BoundingBox;
+
+// Vertex data definning a mesh
+// NOTE: Data stored in CPU memory (and GPU)
+typedef struct Mesh {
+    int vertexCount;        // Number of vertices stored in arrays
+    int triangleCount;      // Number of triangles stored (indexed or not)
+
+    float *vertices;        // Vertex position (XYZ - 3 components per vertex) (shader-location = 0)
+    float *texcoords;       // Vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
+    float *texcoords2;      // Vertex second texture coordinates (useful for lightmaps) (shader-location = 5)
+    float *normals;         // Vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
+    float *tangents;        // Vertex tangents (XYZW - 4 components per vertex) (shader-location = 4)
+    unsigned char *colors;  // Vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
+    unsigned short *indices;// Vertex indices (in case vertex data comes indexed)
+
+    unsigned int vaoId;     // OpenGL Vertex Array Object id
+    unsigned int vboId[7];  // OpenGL Vertex Buffer Objects id (7 types of vertex data)
+} Mesh;
 
 //------------------------------------------------------------------------------------
 // Global Variables Definition
