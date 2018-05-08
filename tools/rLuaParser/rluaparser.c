@@ -39,12 +39,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 int main()
 {
     #define MAX_BUFFER_SIZE     512
-
-    char buffer[MAX_BUFFER_SIZE] = { 0 };
 
     FILE *rFile = fopen("raylib_test.h", "rt");
     FILE *rluaFile = fopen("raylib-lua_test.h", "wt");
@@ -55,6 +54,9 @@ int main()
         return 0;
     }
     
+    char *buffer = (char *)calloc(MAX_BUFFER_SIZE, 1);
+    char *luaPushFuncs = (char *)calloc(1024*1024, 1);
+    char *luaPushPtr = luaPushFuncs;
     int count = 0;
 
     while (!feof(rFile))
@@ -67,10 +69,10 @@ int main()
                  (buffer[1] == 'L') &&
                  (buffer[2] == 'A') && 
                  (buffer[3] == 'P') && 
-                 (buffer[4] == 'I'))            // raylib function declaration
+                 (buffer[0] == 'I'))            // raylib function declaration
         {
-            char funcType[8];
-            char funcName[32];
+            char funcType[64];
+            char funcName[64];
             char funcDesc[256];
             
             char params[128];
@@ -79,22 +81,23 @@ int main()
             
             sscanf(buffer, "RLAPI %s %[^(]s", funcType, funcName);
             
-            char *ptr = NULL;
-            int index = 0;
+            //count++;
+            //printf("Function processed %02i: %s\n", count, funcName);
 
+            int index = 0;
+            char *ptr = NULL;
+ 
             ptr = strchr(buffer, '(');
             
             if (ptr != NULL) index = (int)(ptr - buffer);
             else printf("Character not found!\n");
             
-            printf("Index value: %i\n", index);  // <-- CRASH! index out of bounds?
-            /*
-            sscanf(&buffer[index + 1], "%[^)]s", params);   // Read what's inside '(' and ')'  <-- CRASH after 128 iterations!
+            sscanf(buffer + (index + 1), "%[^)]s", params);   // Read what's inside '(' and ')'  <-- CRASH after 128 iterations!
             
             ptr = strchr(buffer, '/');
             index = (int)(ptr - buffer);
             
-            sscanf(&buffer[index], "%[^\n]s", funcDesc);    // Read function comment after declaration
+            sscanf(buffer + index, "%[^\n]s", funcDesc);    // Read function comment after declaration
             
             fprintf(rluaFile, "%s\n", funcDesc);
             fprintf(rluaFile, "int lua_%s(lua_State *L)\n{\n", funcName);
@@ -137,9 +140,9 @@ int main()
             if (!funcVoid) fprintf(rluaFile, "    LuaPush_%s(L, result);\n", funcType);
 
             fprintf(rluaFile, "    return %i;\n}\n\n", funcVoid ? 0:1);
-            
+
             fflush(rluaFile);
-            */
+
             count++;
             printf("Function processed %02i: %s\n", count, funcName);
             
@@ -147,34 +150,71 @@ int main()
         }
         else if ((buffer[0] == 't') &&
                  (buffer[1] == 'y') &&
-                 (buffer[1] == 'p') &&
-                 (buffer[1] == 'e') &&
-                 (buffer[1] == 'd') &&
-                 (buffer[1] == 'e') &&
-                 (buffer[1] == 'f'))            // raylib data type definition
+                 (buffer[2] == 'p') &&
+                 (buffer[3] == 'e') &&
+                 (buffer[4] == 'd') &&
+                 (buffer[5] == 'e') &&
+                 (buffer[6] == 'f'))            // raylib data type definition
         {
-            char typeName[32];
+            char typeName[64];
             char typeDesc[256];
             
-            int typeParamsCount = 0;
-            char typeParamType[32];
-            char typeParamName[32];
-            char typeParamDesc[128];
+            int count = 0;
+            char typeParamType[16][32] = {{ 0 }};
+            char typeParamName[16][32] = {{ 0 }};
+            char typeParamDesc[16][128] = {{ 0 }};
 
             sscanf(buffer, "typedef struct %s {", typeName);
             
-            fgets(buffer, MAX_BUFFER_SIZE, rFile);  // Read one new full line
+            fgets(buffer, MAX_BUFFER_SIZE, rFile);      // Read one new full line
             
             while (buffer[0] != '}')   // Not closing structure type
             {
-                sscanf(buffer, "    %s %s; %[^\n]s", typeParamType, typeParamName, typeParamDesc);
+                if (buffer[0] != '\n')
+                {
+                    sscanf(buffer, "    %s %[^;]s %[^\n]s", &typeParamType[count][0], &typeParamName[count][0], &typeParamDesc[count][0]);
+                    count++;
+                }
                 
-                printf("%s %s; %s\n", typeParamType, typeParamName, typeParamDesc);
-                
-                typeParamsCount++;
+                fgets(buffer, MAX_BUFFER_SIZE, rFile);  // Read one new full line
             }
+            
+            // Generate LuaGetArgument functions
+            //-----------------------------------
+            fprintf(rluaFile, "static %s LuaGetArgument_%s(lua_State *L, int index)\n{\n", typeName, typeName);
+            fprintf(rluaFile, "    %s result = { 0 };\n", typeName);
+            fprintf(rluaFile, "    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values\n");
+            for (int i = 0; i < count; i++)
+            {
+                // TODO: Consider different types (LUA_TNUMBER, LUA_TTABLE)
+                fprintf(rluaFile, "    luaL_argcheck(L, lua_getfield(L, index, ""%s"") == LUA_TNUMBER, index, \"Expected %s.%s\");\n", typeParamName[i], typeName, typeParamName[i]);
+                
+                // TODO: Consider different data types (lua_tonumber, LuaGetArgument_Vector3)
+                fprintf(rluaFile, "    result.%s = LuaGetArgument_%s(L, -1);\n", typeParamName[i], typeParamType[i]);
+            }
+            fprintf(rluaFile, "    lua_pop(L, %i);\n", count);
+            fprintf(rluaFile, "    return result;}\n\n");
+            
+            // Generate LuaPush functions
+            // NOTE: LuaPush functions are written in a separate string buffer, that will be written to file at the end
+            //-----------------------------------
+            int len = 0;
+            len += sprintf(luaPushPtr + len, "static void LuaPush_%s(lua_State* L, %s obj)\n{\n", typeName, typeName);
+            len += sprintf(luaPushPtr + len, "    lua_createtable(L, 0, %i);\n", count);
+            for (int i = 0; i < count; i++)
+            {
+                len += sprintf(luaPushPtr + len, "    LuaPush_%s(L, obj.%s);\n", typeParamType[i], (typeParamName[i][0] == '*') ? (typeParamName[i] + 1) : typeParamName[i]);
+                len += sprintf(luaPushPtr + len, "    lua_setfield(L, -2, \"%s\");\n", typeParamName[i]);
+            }
+            len += sprintf(luaPushPtr + len, "}\n\n");
+            
+            luaPushPtr += len;
         }
     }
+    
+    fprintf(rluaFile, "%s", luaPushFuncs);
+    
+    free(buffer);
 
     fclose(rFile);
     fclose(rluaFile);

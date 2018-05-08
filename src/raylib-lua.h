@@ -683,6 +683,12 @@ static int lua_Vector3(lua_State* L)
     return 1;
 }
 
+static int lua_Vector4(lua_State* L)
+{
+    LuaPush_Vector4(L, (Vector4) { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) });
+    return 1;
+}
+
 static int lua_Quaternion(lua_State* L)
 {
     LuaPush_Quaternion(L, (Quaternion) { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) });
@@ -691,7 +697,7 @@ static int lua_Quaternion(lua_State* L)
 
 static int lua_Rectangle(lua_State* L)
 {
-    LuaPush_Rectangle(L, (Rectangle) { (int)luaL_checkinteger(L, 1), (int)luaL_checkinteger(L, 2), (int)luaL_checkinteger(L, 3), (int)luaL_checkinteger(L, 4) });
+    LuaPush_Rectangle(L, (Rectangle) { (float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4) });
     return 1;
 }
 
