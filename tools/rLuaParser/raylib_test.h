@@ -9,6 +9,15 @@ typedef struct Vector3 {
     float z;
 } Vector3;
 
+// Trace log type
+typedef enum { 
+    LOG_INFO    = 1,
+    LOG_WARNING = 2, 
+    LOG_ERROR   = 4, 
+    LOG_DEBUG   = 8, 
+    LOG_OTHER   = 16 
+} LogType;
+
 // RenderTexture2D type, for texture rendering
 typedef struct RenderTexture2D {
     unsigned int id;        // OpenGL Framebuffer Object (FBO) id
