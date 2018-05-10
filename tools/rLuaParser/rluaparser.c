@@ -73,6 +73,7 @@ int main()
         else if (strncmp(buffer, "RLAPI", 5) == 0)      // raylib function declaration
         {
             char funcType[64];
+            char funcTypeAux[64];
             char funcName[64];
             char funcDesc[256];
             
@@ -81,6 +82,15 @@ int main()
             char paramName[8][32];
             
             sscanf(buffer, "RLAPI %s %[^(]s", funcType, funcName);
+            
+            if (strcmp(funcType, "const") == 0)
+            {            
+                sscanf(buffer, "RLAPI %s %s %[^(]s", funcType, funcTypeAux, funcName);
+                strcpy(funcType, "string");
+            }
+            
+            if ((funcName[0] == '*') && (funcName[1] == '*')) strcpy(funcName, funcName + 2);
+            else if (funcName[0] == '*') strcpy(funcName, funcName + 1);
 
             int index = 0;
             char *ptr = NULL;
@@ -96,11 +106,11 @@ int main()
             index = (int)(ptr - buffer);
             
             sscanf(buffer + index, "%[^\n]s", funcDesc);    // Read function comment after declaration
-            
-            
+
             // Generate Lua function lua_FuncName()
             //---------------------------------------
             fprintf(rluaFile, "%s\n", funcDesc);
+
             fprintf(rluaFile, "int lua_%s(lua_State *L)\n{\n", funcName);
 
             // Scan params string for number of func params, type and name
@@ -110,10 +120,15 @@ int main()
             
             bool funcVoid = (strcmp(funcType, "void") == 0);
             bool paramsVoid = false;
+            char paramConst[8][16];
+            
+            int len = 0;
 
             while (paramPtr[paramsCount] != NULL)
             {
                 sscanf(paramPtr[paramsCount], "%s %s\n", paramType[paramsCount], paramName[paramsCount]);
+                
+                if (paramName[paramsCount][0] == '*') strcpy(paramName[paramsCount], paramName[paramsCount] + 1);
                 
                 if (strcmp(paramType[paramsCount], "void") == 0)
                 {
@@ -121,7 +136,24 @@ int main()
                     break;
                 }
 
-                fprintf(rluaFile, "    %s %s = LuaGetArgument_%s(L, %i);\n", paramType[paramsCount], paramName[paramsCount], paramType[paramsCount], paramsCount + 1);
+                if (strcmp(paramType[paramsCount], "const") == 0)
+                {
+                    sscanf(paramPtr[paramsCount], "%s %s %s\n", paramConst[paramsCount], paramType[paramsCount], paramName[paramsCount]);
+                    
+                    if (paramName[paramsCount][0] == '*') strcpy(paramName[paramsCount], paramName[paramsCount] + 1);
+                    
+                    fprintf(rluaFile, "    %s %s %s = LuaGetArgument_%s(L, %i);\n", paramConst[paramsCount], paramType[paramsCount], paramName[paramsCount], (strcmp(paramType[paramsCount], "char") == 0) ? "string" : paramType[paramsCount], paramsCount + 1);
+                }
+                else if (strcmp(paramType[paramsCount], "unsigned") == 0)
+                {
+                    sscanf(paramPtr[paramsCount], "%s %s %s\n", paramConst[paramsCount], paramType[paramsCount], paramName[paramsCount]);
+                    
+                    if (paramName[paramsCount][0] == '*') strcpy(paramName[paramsCount], paramName[paramsCount] + 1);
+                    
+                    fprintf(rluaFile, "    %s %s %s = LuaGetArgument_%s(L, %i);\n", paramConst[paramsCount], paramType[paramsCount], paramName[paramsCount], paramConst[paramsCount], paramsCount + 1);
+                }
+                //else if (strcmp(paramType[paramsCount], "...") == 0) 
+                else fprintf(rluaFile, "    %s %s = LuaGetArgument_%s(L, %i);\n", paramType[paramsCount], paramName[paramsCount], paramType[paramsCount], paramsCount + 1);
                 
                 paramsCount++;
                 paramPtr[paramsCount] = strtok(NULL, ",");
@@ -151,7 +183,6 @@ int main()
             
             // Register function names REG() into luaREG string
             //--------------------------------------------------
-            int len = 0;
             len += sprintf(luaREGPtr + len, "REG(%s)\n", funcName);
             luaREGPtr += len;
             
@@ -161,12 +192,14 @@ int main()
             char typeName[64];
             char typeDesc[256];
             
+            int paramsCount = 0;
+            char paramTypes[16][32] = {{ 0 }};
+            char paramNames[16][32] = {{ 0 }};
+            char paramDescs[16][128] = {{ 0 }};
+            
             if (strncmp(buffer + 8, "struct", 6) == 0)
             {
-                int paramsCount = 0;
-                char paramTypes[16][32] = {{ 0 }};
-                char paramNames[16][32] = {{ 0 }};
-                char paramDescs[16][128] = {{ 0 }};
+                
 
                 sscanf(buffer, "typedef struct %s {", typeName);
                 
@@ -218,25 +251,31 @@ int main()
             {
                 //sscanf(buffer, "typedef enum {");
                 //printf("enum detected!\n");
-                
+
                 fgets(buffer, MAX_BUFFER_SIZE, rFile);      // Read one new full line
+                fprintf(rluaFile, "LuaStartEnum();\n");
                 
                 while (buffer[0] != '}')   // Not closing structure type
                 {
                     if (buffer[0] != '\n')
                     {
-                        //sscanf(buffer, "    %s", &paramTypes[paramsCount][0], &paramNames[paramsCount][0]);
-                        //paramsCount++;
+                        sscanf(buffer, "    %s", &paramNames[paramsCount][0]);
+                        fprintf(rluaFile, "LuaSetEnum(\"%s\", %s);\n", &paramNames[paramsCount][0], &paramNames[paramsCount][0]);
+                        paramsCount++;
                     }
                     
                     fgets(buffer, MAX_BUFFER_SIZE, rFile);  // Read one new full line
                 }
+                fprintf(rluaFile, "LuaEndEnum(\"name\");\n");
             }
         }
     }
     
     fprintf(rluaFile, "%s", luaPushFuncs);
-    
+    fprintf(rluaFile, "// raylib Functions (and data types) list\nstatic luaL_Reg raylib_functions[] = {\n");
+    fprintf(rluaFile, "%s\n", luaREG);
+    fprintf(rluaFile, "    { NULL, NULL }  // sentinel: end signal\n};");
+
     free(buffer);
     free(luaPushFuncs);
     free(luaREG);

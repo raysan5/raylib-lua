@@ -16,6 +16,13 @@ static Vector3 LuaGetArgument_Vector3(lua_State *L, int index)
     return result;}
 
 // Trace log type
+LuaStartEnum();
+LuaSetEnum("LOG_INFO", LOG_INFO);
+LuaSetEnum("LOG_WARNING", LOG_WARNING);
+LuaSetEnum("LOG_ERROR", LOG_ERROR);
+LuaSetEnum("LOG_DEBUG", LOG_DEBUG);
+LuaSetEnum("LOG_OTHER", LOG_OTHER);
+LuaEndEnum("name");
 // RenderTexture2D type, for texture rendering
 static RenderTexture2D LuaGetArgument_RenderTexture2D(lua_State *L, int index)
 {
@@ -102,8 +109,8 @@ int lua_InitWindow(lua_State *L)
 {
     int width = LuaGetArgument_int(L, 1);
     int height = LuaGetArgument_int(L, 2);
-    const char = LuaGetArgument_const(L, 3);
-    InitWindow(width, height, char);
+    const char title = LuaGetArgument_string(L, 3);
+    InitWindow(width, height, title);
     return 0;
 }
 
@@ -156,8 +163,8 @@ int lua_SetWindowIcon(lua_State *L)
 // Set title for window (only PLATFORM_DESKTOP)
 int lua_SetWindowTitle(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    SetWindowTitle(char);
+    const char title = LuaGetArgument_string(L, 1);
+    SetWindowTitle(title);
     return 0;
 }
 
@@ -382,10 +389,10 @@ int lua_GetTime(lua_State *L)
 
 // Color-related functions
 // Returns normalized float array for a Color
-int lua_*ColorToFloat(lua_State *L)
+int lua_ColorToFloat(lua_State *L)
 {
     Color color = LuaGetArgument_Color(L, 1);
-    float result = *ColorToFloat(color);
+    float result = ColorToFloat(color);
     LuaPush_float(L, result);
     return 1;
 }
@@ -438,16 +445,16 @@ int lua_ShowLogo(lua_State *L)
 // Setup window configuration flags (view FLAGS)
 int lua_SetConfigFlags(lua_State *L)
 {
-    unsigned char = LuaGetArgument_unsigned(L, 1);
-    SetConfigFlags(char);
+    unsigned char flags = LuaGetArgument_unsigned(L, 1);
+    SetConfigFlags(flags);
     return 0;
 }
 
 // Enable trace log message types (bit flags based)
 int lua_SetTraceLog(lua_State *L)
 {
-    unsigned char = LuaGetArgument_unsigned(L, 1);
-    SetTraceLog(char);
+    unsigned char types = LuaGetArgument_unsigned(L, 1);
+    SetTraceLog(types);
     return 0;
 }
 
@@ -455,17 +462,17 @@ int lua_SetTraceLog(lua_State *L)
 int lua_TraceLog(lua_State *L)
 {
     int logType = LuaGetArgument_int(L, 1);
-    const char = LuaGetArgument_const(L, 2);
-    ... char = LuaGetArgument_...(L, 3);
-    TraceLog(logType, char, char);
+    const char text = LuaGetArgument_string(L, 2);
+    ... title = LuaGetArgument_...(L, 3);
+    TraceLog(logType, text, title);
     return 0;
 }
 
 // Takes a screenshot of current screen (saved a .png)
 int lua_TakeScreenshot(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    TakeScreenshot(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    TakeScreenshot(fileName);
     return 0;
 }
 
@@ -483,22 +490,53 @@ int lua_GetRandomValue(lua_State *L)
 // Check file extension
 int lua_IsFileExtension(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    const char = LuaGetArgument_const(L, 2);
-    bool result = IsFileExtension(char, char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    const char ext = LuaGetArgument_string(L, 2);
+    bool result = IsFileExtension(fileName, ext);
     LuaPush_bool(L, result);
     return 1;
 }
 
-//RLAPI const char *GetExtension(const char *fileName);             // Get pointer to extension for a filename string
-//RLAPI const char *GetFileName(const char *filePath);              // Get pointer to filename for a path string
-//RLAPI const char *GetDirectoryPath(const char *fileName);         // Get full path for a given fileName (uses static string)
-//RLAPI const char *GetWorkingDirectory(void);                      // Get current working directory (uses static string)
+// Get pointer to extension for a filename string
+int lua_GetExtension(lua_State *L)
+{
+    const char fileName = LuaGetArgument_string(L, 1);
+    string result = GetExtension(fileName);
+    LuaPush_string(L, result);
+    return 1;
+}
+
+// Get pointer to filename for a path string
+int lua_GetFileName(lua_State *L)
+{
+    const char filePath = LuaGetArgument_string(L, 1);
+    string result = GetFileName(filePath);
+    LuaPush_string(L, result);
+    return 1;
+}
+
+// Get full path for a given fileName (uses static string)
+int lua_GetDirectoryPath(lua_State *L)
+{
+    const char fileName = LuaGetArgument_string(L, 1);
+    string result = GetDirectoryPath(fileName);
+    LuaPush_string(L, result);
+    return 1;
+}
+
+// Get current working directory (uses static string)
+int lua_GetWorkingDirectory(lua_State *L)
+{
+    string result = GetWorkingDirectory();
+    LuaPush_string(L, result);
+    return 1;
+}
+
 // Change working directory, returns true if success
 int lua_ChangeDirectory(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    bool result = ChangeDirectory(char);
+    const char dir = LuaGetArgument_string(L, 1);
+    bool result = ChangeDirectory(dir);
     LuaPush_bool(L, result);
     return 1;
 }
@@ -512,10 +550,10 @@ int lua_IsFileDropped(lua_State *L)
 }
 
 // Get dropped files names
-int lua_**GetDroppedFiles(lua_State *L)
+int lua_GetDroppedFiles(lua_State *L)
 {
-    int *count = LuaGetArgument_int(L, 1);
-    char result = **GetDroppedFiles(*count);
+    int count = LuaGetArgument_int(L, 1);
+    char result = GetDroppedFiles(count);
     LuaPush_char(L, result);
     return 1;
 }
@@ -616,13 +654,21 @@ int lua_IsGamepadAvailable(lua_State *L)
 int lua_IsGamepadName(lua_State *L)
 {
     int gamepad = LuaGetArgument_int(L, 1);
-    const char = LuaGetArgument_const(L, 2);
-    bool result = IsGamepadName(gamepad, char);
+    const char name = LuaGetArgument_string(L, 2);
+    bool result = IsGamepadName(gamepad, name);
     LuaPush_bool(L, result);
     return 1;
 }
 
-//RLAPI const char *GetGamepadName(int gamepad);                // Return gamepad internal name id
+// Return gamepad internal name id
+int lua_GetGamepadName(lua_State *L)
+{
+    int gamepad = LuaGetArgument_int(L, 1);
+    string result = GetGamepadName(gamepad);
+    LuaPush_string(L, result);
+    return 1;
+}
+
 // Detect if a gamepad button has been pressed once
 int lua_IsGamepadButtonPressed(lua_State *L)
 {
@@ -807,8 +853,8 @@ int lua_GetTouchPosition(lua_State *L)
 // Enable a set of gestures using flags
 int lua_SetGesturesEnabled(lua_State *L)
 {
-    unsigned int = LuaGetArgument_unsigned(L, 1);
-    SetGesturesEnabled(int);
+    unsigned int gestureFlags = LuaGetArgument_unsigned(L, 1);
+    SetGesturesEnabled(gestureFlags);
     return 0;
 }
 
@@ -892,8 +938,8 @@ int lua_SetCameraMode(lua_State *L)
 // Update camera position for selected mode
 int lua_UpdateCamera(lua_State *L)
 {
-    Camera *camera = LuaGetArgument_Camera(L, 1);
-    UpdateCamera(*camera);
+    Camera camera = LuaGetArgument_Camera(L, 1);
+    UpdateCamera(camera);
     return 0;
 }
 
@@ -1184,20 +1230,20 @@ int lua_DrawPoly(lua_State *L)
 // Draw a closed polygon defined by points
 int lua_DrawPolyEx(lua_State *L)
 {
-    Vector2 *points = LuaGetArgument_Vector2(L, 1);
+    Vector2 points = LuaGetArgument_Vector2(L, 1);
     int numPoints = LuaGetArgument_int(L, 2);
     Color color = LuaGetArgument_Color(L, 3);
-    DrawPolyEx(*points, numPoints, color);
+    DrawPolyEx(points, numPoints, color);
     return 0;
 }
 
 // Draw polygon lines
 int lua_DrawPolyExLines(lua_State *L)
 {
-    Vector2 *points = LuaGetArgument_Vector2(L, 1);
+    Vector2 points = LuaGetArgument_Vector2(L, 1);
     int numPoints = LuaGetArgument_int(L, 2);
     Color color = LuaGetArgument_Color(L, 3);
-    DrawPolyExLines(*points, numPoints, color);
+    DrawPolyExLines(points, numPoints, color);
     return 0;
 }
 
@@ -1285,8 +1331,8 @@ int lua_CheckCollisionPointTriangle(lua_State *L)
 // Load image from file into CPU memory (RAM)
 int lua_LoadImage(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Image result = LoadImage(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Image result = LoadImage(fileName);
     LuaPush_Image(L, result);
     return 1;
 }
@@ -1294,10 +1340,10 @@ int lua_LoadImage(lua_State *L)
 // Load image from Color array data (RGBA - 32bit)
 int lua_LoadImageEx(lua_State *L)
 {
-    Color *pixels = LuaGetArgument_Color(L, 1);
+    Color pixels = LuaGetArgument_Color(L, 1);
     int width = LuaGetArgument_int(L, 2);
     int height = LuaGetArgument_int(L, 3);
-    Image result = LoadImageEx(*pixels, width, height);
+    Image result = LoadImageEx(pixels, width, height);
     LuaPush_Image(L, result);
     return 1;
 }
@@ -1313,12 +1359,12 @@ int lua_LoadImagePro(lua_State *L)
 // Load image from RAW file data
 int lua_LoadImageRaw(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char fileName = LuaGetArgument_string(L, 1);
     int width = LuaGetArgument_int(L, 2);
     int height = LuaGetArgument_int(L, 3);
     int format = LuaGetArgument_int(L, 4);
     int headerSize = LuaGetArgument_int(L, 5);
-    Image result = LoadImageRaw(char, width, height, format, headerSize);
+    Image result = LoadImageRaw(fileName, width, height, format, headerSize);
     LuaPush_Image(L, result);
     return 1;
 }
@@ -1326,17 +1372,17 @@ int lua_LoadImageRaw(lua_State *L)
 // Export image as a PNG file
 int lua_ExportImage(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char fileName = LuaGetArgument_string(L, 1);
     Image image = LuaGetArgument_Image(L, 2);
-    ExportImage(char, image);
+    ExportImage(fileName, image);
     return 0;
 }
 
 // Load texture from file into GPU memory (VRAM)
 int lua_LoadTexture(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Texture2D result = LoadTexture(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Texture2D result = LoadTexture(fileName);
     LuaPush_Texture2D(L, result);
     return 1;
 }
@@ -1385,10 +1431,10 @@ int lua_UnloadRenderTexture(lua_State *L)
 }
 
 // Get pixel data from image as a Color struct array
-int lua_*GetImageData(lua_State *L)
+int lua_GetImageData(lua_State *L)
 {
     Image image = LuaGetArgument_Image(L, 1);
-    Color result = *GetImageData(image);
+    Color result = GetImageData(image);
     LuaPush_Color(L, result);
     return 1;
 }
@@ -1417,8 +1463,8 @@ int lua_GetTextureData(lua_State *L)
 int lua_UpdateTexture(lua_State *L)
 {
     Texture2D texture = LuaGetArgument_Texture2D(L, 1);
-    const void = LuaGetArgument_const(L, 2);
-    UpdateTexture(texture, void);
+    const void pixels = LuaGetArgument_void(L, 2);
+    UpdateTexture(texture, pixels);
     return 0;
 }
 
@@ -1435,113 +1481,113 @@ int lua_ImageCopy(lua_State *L)
 // Convert image to POT (power-of-two)
 int lua_ImageToPOT(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     Color fillColor = LuaGetArgument_Color(L, 2);
-    ImageToPOT(*image, fillColor);
+    ImageToPOT(image, fillColor);
     return 0;
 }
 
 // Convert image data to desired format
 int lua_ImageFormat(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     int newFormat = LuaGetArgument_int(L, 2);
-    ImageFormat(*image, newFormat);
+    ImageFormat(image, newFormat);
     return 0;
 }
 
 // Apply alpha mask to image
 int lua_ImageAlphaMask(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     Image alphaMask = LuaGetArgument_Image(L, 2);
-    ImageAlphaMask(*image, alphaMask);
+    ImageAlphaMask(image, alphaMask);
     return 0;
 }
 
 // Clear alpha channel to desired color
 int lua_ImageAlphaClear(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     Color color = LuaGetArgument_Color(L, 2);
     float threshold = LuaGetArgument_float(L, 3);
-    ImageAlphaClear(*image, color, threshold);
+    ImageAlphaClear(image, color, threshold);
     return 0;
 }
 
 // Crop image depending on alpha value
 int lua_ImageAlphaCrop(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     float threshold = LuaGetArgument_float(L, 2);
-    ImageAlphaCrop(*image, threshold);
+    ImageAlphaCrop(image, threshold);
     return 0;
 }
 
 // Premultiply alpha channel
 int lua_ImageAlphaPremultiply(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageAlphaPremultiply(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageAlphaPremultiply(image);
     return 0;
 }
 
 // Crop an image to a defined rectangle
 int lua_ImageCrop(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     Rectangle crop = LuaGetArgument_Rectangle(L, 2);
-    ImageCrop(*image, crop);
+    ImageCrop(image, crop);
     return 0;
 }
 
 // Resize and image (bilinear filtering)
 int lua_ImageResize(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     int newWidth = LuaGetArgument_int(L, 2);
     int newHeight = LuaGetArgument_int(L, 3);
-    ImageResize(*image, newWidth, newHeight);
+    ImageResize(image, newWidth, newHeight);
     return 0;
 }
 
 // Resize and image (Nearest-Neighbor scaling algorithm)
 int lua_ImageResizeNN(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     int newWidth = LuaGetArgument_int(L, 2);
     int newHeight = LuaGetArgument_int(L, 3);
-    ImageResizeNN(*image, newWidth, newHeight);
+    ImageResizeNN(image, newWidth, newHeight);
     return 0;
 }
 
 // Generate all mipmap levels for a provided image
 int lua_ImageMipmaps(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageMipmaps(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageMipmaps(image);
     return 0;
 }
 
 // Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
 int lua_ImageDither(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     int rBpp = LuaGetArgument_int(L, 2);
     int gBpp = LuaGetArgument_int(L, 3);
     int bBpp = LuaGetArgument_int(L, 4);
     int aBpp = LuaGetArgument_int(L, 5);
-    ImageDither(*image, rBpp, gBpp, bBpp, aBpp);
+    ImageDither(image, rBpp, gBpp, bBpp, aBpp);
     return 0;
 }
 
 // Create an image from text (default font)
 int lua_ImageText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char text = LuaGetArgument_string(L, 1);
     int fontSize = LuaGetArgument_int(L, 2);
     Color color = LuaGetArgument_Color(L, 3);
-    Image result = ImageText(char, fontSize, color);
+    Image result = ImageText(text, fontSize, color);
     LuaPush_Image(L, result);
     return 1;
 }
@@ -1550,11 +1596,11 @@ int lua_ImageText(lua_State *L)
 int lua_ImageTextEx(lua_State *L)
 {
     SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
-    const char = LuaGetArgument_const(L, 2);
+    const char text = LuaGetArgument_string(L, 2);
     float fontSize = LuaGetArgument_float(L, 3);
     int spacing = LuaGetArgument_int(L, 4);
     Color tint = LuaGetArgument_Color(L, 5);
-    Image result = ImageTextEx(font, char, fontSize, spacing, tint);
+    Image result = ImageTextEx(font, text, fontSize, spacing, tint);
     LuaPush_Image(L, result);
     return 1;
 }
@@ -1562,107 +1608,107 @@ int lua_ImageTextEx(lua_State *L)
 // Draw a source image within a destination image
 int lua_ImageDraw(lua_State *L)
 {
-    Image *dst = LuaGetArgument_Image(L, 1);
+    Image dst = LuaGetArgument_Image(L, 1);
     Image src = LuaGetArgument_Image(L, 2);
     Rectangle srcRec = LuaGetArgument_Rectangle(L, 3);
     Rectangle dstRec = LuaGetArgument_Rectangle(L, 4);
-    ImageDraw(*dst, src, srcRec, dstRec);
+    ImageDraw(dst, src, srcRec, dstRec);
     return 0;
 }
 
 // Draw rectangle within an image
 int lua_ImageDrawRectangle(lua_State *L)
 {
-    Image *dst = LuaGetArgument_Image(L, 1);
+    Image dst = LuaGetArgument_Image(L, 1);
     Vector2 position = LuaGetArgument_Vector2(L, 2);
     Rectangle rec = LuaGetArgument_Rectangle(L, 3);
     Color color = LuaGetArgument_Color(L, 4);
-    ImageDrawRectangle(*dst, position, rec, color);
+    ImageDrawRectangle(dst, position, rec, color);
     return 0;
 }
 
 // Draw text (default font) within an image (destination)
 int lua_ImageDrawText(lua_State *L)
 {
-    Image *dst = LuaGetArgument_Image(L, 1);
+    Image dst = LuaGetArgument_Image(L, 1);
     Vector2 position = LuaGetArgument_Vector2(L, 2);
-    const char = LuaGetArgument_const(L, 3);
+    const char text = LuaGetArgument_string(L, 3);
     int fontSize = LuaGetArgument_int(L, 4);
     Color color = LuaGetArgument_Color(L, 5);
-    ImageDrawText(*dst, position, char, fontSize, color);
+    ImageDrawText(dst, position, text, fontSize, color);
     return 0;
 }
 
 // Draw text (custom sprite font) within an image (destination)
 int lua_ImageDrawTextEx(lua_State *L)
 {
-    Image *dst = LuaGetArgument_Image(L, 1);
+    Image dst = LuaGetArgument_Image(L, 1);
     Vector2 position = LuaGetArgument_Vector2(L, 2);
     SpriteFont font = LuaGetArgument_SpriteFont(L, 3);
-    const char = LuaGetArgument_const(L, 4);
+    const char text = LuaGetArgument_string(L, 4);
     float fontSize = LuaGetArgument_float(L, 5);
     int spacing = LuaGetArgument_int(L, 6);
     Color color = LuaGetArgument_Color(L, 7);
-    ImageDrawTextEx(*dst, position, font, char, fontSize, spacing, color);
+    ImageDrawTextEx(dst, position, font, text, fontSize, spacing, color);
     return 0;
 }
 
 // Flip image vertically
 int lua_ImageFlipVertical(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageFlipVertical(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageFlipVertical(image);
     return 0;
 }
 
 // Flip image horizontally
 int lua_ImageFlipHorizontal(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageFlipHorizontal(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageFlipHorizontal(image);
     return 0;
 }
 
 // Modify image color: tint
 int lua_ImageColorTint(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     Color color = LuaGetArgument_Color(L, 2);
-    ImageColorTint(*image, color);
+    ImageColorTint(image, color);
     return 0;
 }
 
 // Modify image color: invert
 int lua_ImageColorInvert(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageColorInvert(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageColorInvert(image);
     return 0;
 }
 
 // Modify image color: grayscale
 int lua_ImageColorGrayscale(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
-    ImageColorGrayscale(*image);
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageColorGrayscale(image);
     return 0;
 }
 
 // Modify image color: contrast (-100 to 100)
 int lua_ImageColorContrast(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     float contrast = LuaGetArgument_float(L, 2);
-    ImageColorContrast(*image, contrast);
+    ImageColorContrast(image, contrast);
     return 0;
 }
 
 // Modify image color: brightness (-255 to 255)
 int lua_ImageColorBrightness(lua_State *L)
 {
-    Image *image = LuaGetArgument_Image(L, 1);
+    Image image = LuaGetArgument_Image(L, 1);
     int brightness = LuaGetArgument_int(L, 2);
-    ImageColorBrightness(*image, brightness);
+    ImageColorBrightness(image, brightness);
     return 0;
 }
 
@@ -1768,8 +1814,8 @@ int lua_GenImageCellular(lua_State *L)
 // Generate GPU mipmaps for a texture
 int lua_GenTextureMipmaps(lua_State *L)
 {
-    Texture2D *texture = LuaGetArgument_Texture2D(L, 1);
-    GenTextureMipmaps(*texture);
+    Texture2D texture = LuaGetArgument_Texture2D(L, 1);
+    GenTextureMipmaps(texture);
     return 0;
 }
 
@@ -1864,8 +1910,8 @@ int lua_GetDefaultFont(lua_State *L)
 // Load SpriteFont from file into GPU memory (VRAM)
 int lua_LoadSpriteFont(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    SpriteFont result = LoadSpriteFont(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    SpriteFont result = LoadSpriteFont(fileName);
     LuaPush_SpriteFont(L, result);
     return 1;
 }
@@ -1873,11 +1919,11 @@ int lua_LoadSpriteFont(lua_State *L)
 // Load SpriteFont from file with extended parameters
 int lua_LoadSpriteFontEx(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char fileName = LuaGetArgument_string(L, 1);
     int fontSize = LuaGetArgument_int(L, 2);
     int charsCount = LuaGetArgument_int(L, 3);
-    int *fontChars = LuaGetArgument_int(L, 4);
-    SpriteFont result = LoadSpriteFontEx(char, fontSize, charsCount, *fontChars);
+    int fontChars = LuaGetArgument_int(L, 4);
+    SpriteFont result = LoadSpriteFontEx(fileName, fontSize, charsCount, fontChars);
     LuaPush_SpriteFont(L, result);
     return 1;
 }
@@ -1903,12 +1949,12 @@ int lua_DrawFPS(lua_State *L)
 // Draw text (using default font)
 int lua_DrawText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char text = LuaGetArgument_string(L, 1);
     int posX = LuaGetArgument_int(L, 2);
     int posY = LuaGetArgument_int(L, 3);
     int fontSize = LuaGetArgument_int(L, 4);
     Color color = LuaGetArgument_Color(L, 5);
-    DrawText(char, posX, posY, fontSize, color);
+    DrawText(text, posX, posY, fontSize, color);
     return 0;
 }
 
@@ -1916,12 +1962,12 @@ int lua_DrawText(lua_State *L)
 int lua_DrawTextEx(lua_State *L)
 {
     SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
-    const char* = LuaGetArgument_const(L, 2);
+    const char* text = LuaGetArgument_char*(L, 2);
     Vector2 position = LuaGetArgument_Vector2(L, 3);
     float fontSize = LuaGetArgument_float(L, 4);
     int spacing = LuaGetArgument_int(L, 5);
     Color tint = LuaGetArgument_Color(L, 6);
-    DrawTextEx(font, char*, position, fontSize, spacing, tint);
+    DrawTextEx(font, text, position, fontSize, spacing, tint);
     return 0;
 }
 
@@ -1929,9 +1975,9 @@ int lua_DrawTextEx(lua_State *L)
 // Measure string width for default font
 int lua_MeasureText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char text = LuaGetArgument_string(L, 1);
     int fontSize = LuaGetArgument_int(L, 2);
-    int result = MeasureText(char, fontSize);
+    int result = MeasureText(text, fontSize);
     LuaPush_int(L, result);
     return 1;
 }
@@ -1940,32 +1986,32 @@ int lua_MeasureText(lua_State *L)
 int lua_MeasureTextEx(lua_State *L)
 {
     SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
-    const char = LuaGetArgument_const(L, 2);
+    const char text = LuaGetArgument_string(L, 2);
     float fontSize = LuaGetArgument_float(L, 3);
     int spacing = LuaGetArgument_int(L, 4);
-    Vector2 result = MeasureTextEx(font, char, fontSize, spacing);
+    Vector2 result = MeasureTextEx(font, text, fontSize, spacing);
     LuaPush_Vector2(L, result);
     return 1;
 }
 
 // Formatting of text with variables to 'embed'
-int lua_char *FormatText(lua_State *L)
+int lua_FormatText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    ... char = LuaGetArgument_...(L, 2);
-    const result = char *FormatText(char, char);
-    LuaPush_const(L, result);
+    const char text = LuaGetArgument_string(L, 1);
+    ... text = LuaGetArgument_...(L, 2);
+    string result = FormatText(text, text);
+    LuaPush_string(L, result);
     return 1;
 }
 
 // Get a piece of a text string
-int lua_char *SubText(lua_State *L)
+int lua_SubText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char text = LuaGetArgument_string(L, 1);
     int position = LuaGetArgument_int(L, 2);
     int length = LuaGetArgument_int(L, 3);
-    const result = char *SubText(char, position, length);
-    LuaPush_const(L, result);
+    string result = SubText(text, position, length);
+    LuaPush_string(L, result);
     return 1;
 }
 
@@ -2156,8 +2202,8 @@ int lua_DrawGizmo(lua_State *L)
 // Load model from files (mesh and material)
 int lua_LoadModel(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Model result = LoadModel(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Model result = LoadModel(fileName);
     LuaPush_Model(L, result);
     return 1;
 }
@@ -2183,8 +2229,8 @@ int lua_UnloadModel(lua_State *L)
 // Load mesh from file
 int lua_LoadMesh(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Mesh result = LoadMesh(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Mesh result = LoadMesh(fileName);
     LuaPush_Mesh(L, result);
     return 1;
 }
@@ -2192,17 +2238,17 @@ int lua_LoadMesh(lua_State *L)
 // Unload mesh from memory (RAM and/or VRAM)
 int lua_UnloadMesh(lua_State *L)
 {
-    Mesh *mesh = LuaGetArgument_Mesh(L, 1);
-    UnloadMesh(*mesh);
+    Mesh mesh = LuaGetArgument_Mesh(L, 1);
+    UnloadMesh(mesh);
     return 0;
 }
 
 // Export mesh as an OBJ file
 int lua_ExportMesh(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
+    const char fileName = LuaGetArgument_string(L, 1);
     Mesh mesh = LuaGetArgument_Mesh(L, 2);
-    ExportMesh(char, mesh);
+    ExportMesh(fileName, mesh);
     return 0;
 }
 
@@ -2219,16 +2265,16 @@ int lua_MeshBoundingBox(lua_State *L)
 // Compute mesh tangents 
 int lua_MeshTangents(lua_State *L)
 {
-    Mesh *mesh = LuaGetArgument_Mesh(L, 1);
-    MeshTangents(*mesh);
+    Mesh mesh = LuaGetArgument_Mesh(L, 1);
+    MeshTangents(mesh);
     return 0;
 }
 
 // Compute mesh binormals
 int lua_MeshBinormals(lua_State *L)
 {
-    Mesh *mesh = LuaGetArgument_Mesh(L, 1);
-    MeshBinormals(*mesh);
+    Mesh mesh = LuaGetArgument_Mesh(L, 1);
+    MeshBinormals(mesh);
     return 0;
 }
 
@@ -2337,8 +2383,8 @@ int lua_GenMeshCubicmap(lua_State *L)
 // Load material from file
 int lua_LoadMaterial(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Material result = LoadMaterial(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Material result = LoadMaterial(fileName);
     LuaPush_Material(L, result);
     return 1;
 }
@@ -2493,8 +2539,8 @@ int lua_CheckCollisionRaySphereEx(lua_State *L)
     Ray ray = LuaGetArgument_Ray(L, 1);
     Vector3 spherePosition = LuaGetArgument_Vector3(L, 2);
     float sphereRadius = LuaGetArgument_float(L, 3);
-    Vector3 *collisionPoint = LuaGetArgument_Vector3(L, 4);
-    bool result = CheckCollisionRaySphereEx(ray, spherePosition, sphereRadius, *collisionPoint);
+    Vector3 collisionPoint = LuaGetArgument_Vector3(L, 4);
+    bool result = CheckCollisionRaySphereEx(ray, spherePosition, sphereRadius, collisionPoint);
     LuaPush_bool(L, result);
     return 1;
 }
@@ -2513,8 +2559,8 @@ int lua_CheckCollisionRayBox(lua_State *L)
 int lua_GetCollisionRayModel(lua_State *L)
 {
     Ray ray = LuaGetArgument_Ray(L, 1);
-    Model *model = LuaGetArgument_Model(L, 2);
-    RayHitInfo result = GetCollisionRayModel(ray, *model);
+    Model model = LuaGetArgument_Model(L, 2);
+    RayHitInfo result = GetCollisionRayModel(ray, model);
     LuaPush_RayHitInfo(L, result);
     return 1;
 }
@@ -2547,10 +2593,10 @@ int lua_GetCollisionRayGround(lua_State *L)
 //------------------------------------------------------------------------------------
 // Shader loading/unloading functions
 // Load chars array from text file
-int lua_*LoadText(lua_State *L)
+int lua_LoadText(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    char result = *LoadText(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    char result = LoadText(fileName);
     LuaPush_char(L, result);
     return 1;
 }
@@ -2558,9 +2604,9 @@ int lua_*LoadText(lua_State *L)
 // Load shader from files and bind default locations
 int lua_LoadShader(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    const char = LuaGetArgument_const(L, 2);
-    Shader result = LoadShader(char, char);
+    const char vsFileName = LuaGetArgument_string(L, 1);
+    const char fsFileName = LuaGetArgument_string(L, 2);
+    Shader result = LoadShader(vsFileName, fsFileName);
     LuaPush_Shader(L, result);
     return 1;
 }
@@ -2568,9 +2614,9 @@ int lua_LoadShader(lua_State *L)
 // Load shader from code strings and bind default locations
 int lua_LoadShaderCode(lua_State *L)
 {
-    char *vsCode = LuaGetArgument_char(L, 1);
-    char *fsCode = LuaGetArgument_char(L, 2);
-    Shader result = LoadShaderCode(*vsCode, *fsCode);
+    char vsCode = LuaGetArgument_char(L, 1);
+    char fsCode = LuaGetArgument_char(L, 2);
+    Shader result = LoadShaderCode(vsCode, fsCode);
     LuaPush_Shader(L, result);
     return 1;
 }
@@ -2604,8 +2650,8 @@ int lua_GetTextureDefault(lua_State *L)
 int lua_GetShaderLocation(lua_State *L)
 {
     Shader shader = LuaGetArgument_Shader(L, 1);
-    const char = LuaGetArgument_const(L, 2);
-    int result = GetShaderLocation(shader, char);
+    const char uniformName = LuaGetArgument_string(L, 2);
+    int result = GetShaderLocation(shader, uniformName);
     LuaPush_int(L, result);
     return 1;
 }
@@ -2615,9 +2661,9 @@ int lua_SetShaderValue(lua_State *L)
 {
     Shader shader = LuaGetArgument_Shader(L, 1);
     int uniformLoc = LuaGetArgument_int(L, 2);
-    const float = LuaGetArgument_const(L, 3);
+    const float value = LuaGetArgument_float(L, 3);
     int size = LuaGetArgument_int(L, 4);
-    SetShaderValue(shader, uniformLoc, float, size);
+    SetShaderValue(shader, uniformLoc, value, size);
     return 0;
 }
 
@@ -2626,9 +2672,9 @@ int lua_SetShaderValuei(lua_State *L)
 {
     Shader shader = LuaGetArgument_Shader(L, 1);
     int uniformLoc = LuaGetArgument_int(L, 2);
-    const int = LuaGetArgument_const(L, 3);
+    const int value = LuaGetArgument_int(L, 3);
     int size = LuaGetArgument_int(L, 4);
-    SetShaderValuei(shader, uniformLoc, int, size);
+    SetShaderValuei(shader, uniformLoc, value, size);
     return 0;
 }
 
@@ -2788,8 +2834,8 @@ int lua_SetVrDistortionShader(lua_State *L)
 // Update VR tracking (position and orientation) and camera
 int lua_UpdateVrTracking(lua_State *L)
 {
-    Camera *camera = LuaGetArgument_Camera(L, 1);
-    UpdateVrTracking(*camera);
+    Camera camera = LuaGetArgument_Camera(L, 1);
+    UpdateVrTracking(camera);
     return 0;
 }
 
@@ -2852,8 +2898,8 @@ int lua_SetMasterVolume(lua_State *L)
 // Load wave data from file
 int lua_LoadWave(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Wave result = LoadWave(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Wave result = LoadWave(fileName);
     LuaPush_Wave(L, result);
     return 1;
 }
@@ -2869,8 +2915,8 @@ int lua_LoadWaveEx(lua_State *L)
 // Load sound from file
 int lua_LoadSound(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Sound result = LoadSound(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Sound result = LoadSound(fileName);
     LuaPush_Sound(L, result);
     return 1;
 }
@@ -2888,9 +2934,9 @@ int lua_LoadSoundFromWave(lua_State *L)
 int lua_UpdateSound(lua_State *L)
 {
     Sound sound = LuaGetArgument_Sound(L, 1);
-    const void = LuaGetArgument_const(L, 2);
+    const void data = LuaGetArgument_void(L, 2);
     int samplesCount = LuaGetArgument_int(L, 3);
-    UpdateSound(sound, void, samplesCount);
+    UpdateSound(sound, data, samplesCount);
     return 0;
 }
 
@@ -2973,11 +3019,11 @@ int lua_SetSoundPitch(lua_State *L)
 // Convert wave data to desired format
 int lua_WaveFormat(lua_State *L)
 {
-    Wave *wave = LuaGetArgument_Wave(L, 1);
+    Wave wave = LuaGetArgument_Wave(L, 1);
     int sampleRate = LuaGetArgument_int(L, 2);
     int sampleSize = LuaGetArgument_int(L, 3);
     int channels = LuaGetArgument_int(L, 4);
-    WaveFormat(*wave, sampleRate, sampleSize, channels);
+    WaveFormat(wave, sampleRate, sampleSize, channels);
     return 0;
 }
 
@@ -2993,18 +3039,18 @@ int lua_WaveCopy(lua_State *L)
 // Crop a wave to defined samples range
 int lua_WaveCrop(lua_State *L)
 {
-    Wave *wave = LuaGetArgument_Wave(L, 1);
+    Wave wave = LuaGetArgument_Wave(L, 1);
     int initSample = LuaGetArgument_int(L, 2);
     int finalSample = LuaGetArgument_int(L, 3);
-    WaveCrop(*wave, initSample, finalSample);
+    WaveCrop(wave, initSample, finalSample);
     return 0;
 }
 
 // Get samples data from wave as a floats array
-int lua_*GetWaveData(lua_State *L)
+int lua_GetWaveData(lua_State *L)
 {
     Wave wave = LuaGetArgument_Wave(L, 1);
-    float result = *GetWaveData(wave);
+    float result = GetWaveData(wave);
     LuaPush_float(L, result);
     return 1;
 }
@@ -3013,8 +3059,8 @@ int lua_*GetWaveData(lua_State *L)
 // Load music stream from file
 int lua_LoadMusicStream(lua_State *L)
 {
-    const char = LuaGetArgument_const(L, 1);
-    Music result = LoadMusicStream(char);
+    const char fileName = LuaGetArgument_string(L, 1);
+    Music result = LoadMusicStream(fileName);
     LuaPush_Music(L, result);
     return 1;
 }
@@ -3125,10 +3171,10 @@ int lua_GetMusicTimePlayed(lua_State *L)
 // Init audio stream (to stream raw audio pcm data)
 int lua_InitAudioStream(lua_State *L)
 {
-    unsigned int = LuaGetArgument_unsigned(L, 1);
-    unsigned int = LuaGetArgument_unsigned(L, 2);
-    unsigned int = LuaGetArgument_unsigned(L, 3);
-    AudioStream result = InitAudioStream(int, int, int);
+    unsigned int sampleRate = LuaGetArgument_unsigned(L, 1);
+    unsigned int sampleSize = LuaGetArgument_unsigned(L, 2);
+    unsigned int channels = LuaGetArgument_unsigned(L, 3);
+    AudioStream result = InitAudioStream(sampleRate, sampleSize, channels);
     LuaPush_AudioStream(L, result);
     return 1;
 }
@@ -3137,9 +3183,9 @@ int lua_InitAudioStream(lua_State *L)
 int lua_UpdateAudioStream(lua_State *L)
 {
     AudioStream stream = LuaGetArgument_AudioStream(L, 1);
-    const void = LuaGetArgument_const(L, 2);
+    const void data = LuaGetArgument_void(L, 2);
     int samplesCount = LuaGetArgument_int(L, 3);
-    UpdateAudioStream(stream, void, samplesCount);
+    UpdateAudioStream(stream, data, samplesCount);
     return 0;
 }
 
@@ -3290,3 +3336,336 @@ static void LuaPush_Mesh(lua_State* L, Mesh obj)
     lua_setfield(L, -2, "int vboId[7]");
 }
 
+// raylib Functions (and data types) list
+static luaL_Reg raylib_functions[] = {
+REG(InitWindow)
+REG(CloseWindow)
+REG(IsWindowReady)
+REG(WindowShouldClose)
+REG(IsWindowMinimized)
+REG(ToggleFullscreen)
+REG(SetWindowIcon)
+REG(SetWindowTitle)
+REG(SetWindowPosition)
+REG(SetWindowMonitor)
+REG(SetWindowMinSize)
+REG(SetWindowSize)
+REG(GetScreenWidth)
+REG(GetScreenHeight)
+REG(ShowCursor)
+REG(HideCursor)
+REG(IsCursorHidden)
+REG(EnableCursor)
+REG(DisableCursor)
+REG(ClearBackground)
+REG(BeginDrawing)
+REG(EndDrawing)
+REG(Begin2dMode)
+REG(End2dMode)
+REG(Begin3dMode)
+REG(End3dMode)
+REG(BeginTextureMode)
+REG(EndTextureMode)
+REG(GetMouseRay)
+REG(GetWorldToScreen)
+REG(GetCameraMatrix)
+REG(SetTargetFPS)
+REG(GetFPS)
+REG(GetFrameTime)
+REG(GetTime)
+REG(ColorToFloat)
+REG(ColorToInt)
+REG(ColorToHSV)
+REG(GetColor)
+REG(Fade)
+REG(ShowLogo)
+REG(SetConfigFlags)
+REG(SetTraceLog)
+REG(TraceLog)
+REG(TakeScreenshot)
+REG(GetRandomValue)
+REG(IsFileExtension)
+REG(GetExtension)
+REG(GetFileName)
+REG(GetDirectoryPath)
+REG(GetWorkingDirectory)
+REG(ChangeDirectory)
+REG(IsFileDropped)
+REG(GetDroppedFiles)
+REG(ClearDroppedFiles)
+REG(StorageSaveValue)
+REG(StorageLoadValue)
+REG(IsKeyPressed)
+REG(IsKeyDown)
+REG(IsKeyReleased)
+REG(IsKeyUp)
+REG(GetKeyPressed)
+REG(SetExitKey)
+REG(IsGamepadAvailable)
+REG(IsGamepadName)
+REG(GetGamepadName)
+REG(IsGamepadButtonPressed)
+REG(IsGamepadButtonDown)
+REG(IsGamepadButtonReleased)
+REG(IsGamepadButtonUp)
+REG(GetGamepadButtonPressed)
+REG(GetGamepadAxisCount)
+REG(GetGamepadAxisMovement)
+REG(IsMouseButtonPressed)
+REG(IsMouseButtonDown)
+REG(IsMouseButtonReleased)
+REG(IsMouseButtonUp)
+REG(GetMouseX)
+REG(GetMouseY)
+REG(GetMousePosition)
+REG(SetMousePosition)
+REG(SetMouseScale)
+REG(GetMouseWheelMove)
+REG(GetTouchX)
+REG(GetTouchY)
+REG(GetTouchPosition)
+REG(SetGesturesEnabled)
+REG(IsGestureDetected)
+REG(GetGestureDetected)
+REG(GetTouchPointsCount)
+REG(GetGestureHoldDuration)
+REG(GetGestureDragVector)
+REG(GetGestureDragAngle)
+REG(GetGesturePinchVector)
+REG(GetGesturePinchAngle)
+REG(SetCameraMode)
+REG(UpdateCamera)
+REG(SetCameraPanControl)
+REG(SetCameraAltControl)
+REG(SetCameraSmoothZoomControl)
+REG(SetCameraMoveControls)
+REG(DrawPixel)
+REG(DrawPixelV)
+REG(DrawLine)
+REG(DrawLineV)
+REG(DrawLineEx)
+REG(DrawLineBezier)
+REG(DrawCircle)
+REG(DrawCircleGradient)
+REG(DrawCircleV)
+REG(DrawCircleLines)
+REG(DrawRectangle)
+REG(DrawRectangleV)
+REG(DrawRectangleRec)
+REG(DrawRectanglePro)
+REG(DrawRectangleGradientV)
+REG(DrawRectangleGradientH)
+REG(DrawRectangleGradientEx)
+REG(DrawRectangleLines)
+REG(DrawRectangleLinesEx)
+REG(DrawTriangle)
+REG(DrawTriangleLines)
+REG(DrawPoly)
+REG(DrawPolyEx)
+REG(DrawPolyExLines)
+REG(CheckCollisionRecs)
+REG(CheckCollisionCircles)
+REG(CheckCollisionCircleRec)
+REG(GetCollisionRec)
+REG(CheckCollisionPointRec)
+REG(CheckCollisionPointCircle)
+REG(CheckCollisionPointTriangle)
+REG(LoadImage)
+REG(LoadImageEx)
+REG(LoadImagePro)
+REG(LoadImageRaw)
+REG(ExportImage)
+REG(LoadTexture)
+REG(LoadTextureFromImage)
+REG(LoadRenderTexture)
+REG(UnloadImage)
+REG(UnloadTexture)
+REG(UnloadRenderTexture)
+REG(GetImageData)
+REG(GetPixelDataSize)
+REG(GetTextureData)
+REG(UpdateTexture)
+REG(ImageCopy)
+REG(ImageToPOT)
+REG(ImageFormat)
+REG(ImageAlphaMask)
+REG(ImageAlphaClear)
+REG(ImageAlphaCrop)
+REG(ImageAlphaPremultiply)
+REG(ImageCrop)
+REG(ImageResize)
+REG(ImageResizeNN)
+REG(ImageMipmaps)
+REG(ImageDither)
+REG(ImageText)
+REG(ImageTextEx)
+REG(ImageDraw)
+REG(ImageDrawRectangle)
+REG(ImageDrawText)
+REG(ImageDrawTextEx)
+REG(ImageFlipVertical)
+REG(ImageFlipHorizontal)
+REG(ImageColorTint)
+REG(ImageColorInvert)
+REG(ImageColorGrayscale)
+REG(ImageColorContrast)
+REG(ImageColorBrightness)
+REG(GenImageColor)
+REG(GenImageGradientV)
+REG(GenImageGradientH)
+REG(GenImageGradientRadial)
+REG(GenImageChecked)
+REG(GenImageWhiteNoise)
+REG(GenImagePerlinNoise)
+REG(GenImageCellular)
+REG(GenTextureMipmaps)
+REG(SetTextureFilter)
+REG(SetTextureWrap)
+REG(DrawTexture)
+REG(DrawTextureV)
+REG(DrawTextureEx)
+REG(DrawTextureRec)
+REG(DrawTexturePro)
+REG(GetDefaultFont)
+REG(LoadSpriteFont)
+REG(LoadSpriteFontEx)
+REG(UnloadSpriteFont)
+REG(DrawFPS)
+REG(DrawText)
+REG(DrawTextEx)
+REG(MeasureText)
+REG(MeasureTextEx)
+REG(FormatText)
+REG(SubText)
+REG(GetGlyphIndex)
+REG(DrawLine3D)
+REG(DrawCircle3D)
+REG(DrawCube)
+REG(DrawCubeV)
+REG(DrawCubeWires)
+REG(DrawCubeTexture)
+REG(DrawSphere)
+REG(DrawSphereEx)
+REG(DrawSphereWires)
+REG(DrawCylinder)
+REG(DrawCylinderWires)
+REG(DrawPlane)
+REG(DrawRay)
+REG(DrawGrid)
+REG(DrawGizmo)
+REG(LoadModel)
+REG(LoadModelFromMesh)
+REG(UnloadModel)
+REG(LoadMesh)
+REG(UnloadMesh)
+REG(ExportMesh)
+REG(MeshBoundingBox)
+REG(MeshTangents)
+REG(MeshBinormals)
+REG(GenMeshPlane)
+REG(GenMeshCube)
+REG(GenMeshSphere)
+REG(GenMeshHemiSphere)
+REG(GenMeshCylinder)
+REG(GenMeshTorus)
+REG(GenMeshKnot)
+REG(GenMeshHeightmap)
+REG(GenMeshCubicmap)
+REG(LoadMaterial)
+REG(LoadMaterialDefault)
+REG(UnloadMaterial)
+REG(DrawModel)
+REG(DrawModelEx)
+REG(DrawModelWires)
+REG(DrawModelWiresEx)
+REG(DrawBoundingBox)
+REG(DrawBillboard)
+REG(DrawBillboardRec)
+REG(CheckCollisionSpheres)
+REG(CheckCollisionBoxes)
+REG(CheckCollisionBoxSphere)
+REG(CheckCollisionRaySphere)
+REG(CheckCollisionRaySphereEx)
+REG(CheckCollisionRayBox)
+REG(GetCollisionRayModel)
+REG(GetCollisionRayTriangle)
+REG(GetCollisionRayGround)
+REG(LoadText)
+REG(LoadShader)
+REG(LoadShaderCode)
+REG(UnloadShader)
+REG(GetShaderDefault)
+REG(GetTextureDefault)
+REG(GetShaderLocation)
+REG(SetShaderValue)
+REG(SetShaderValuei)
+REG(SetShaderValueMatrix)
+REG(SetMatrixProjection)
+REG(SetMatrixModelview)
+REG(GetMatrixModelview)
+REG(GenTextureCubemap)
+REG(GenTextureIrradiance)
+REG(GenTexturePrefilter)
+REG(GenTextureBRDF)
+REG(BeginShaderMode)
+REG(EndShaderMode)
+REG(BeginBlendMode)
+REG(EndBlendMode)
+REG(GetVrDeviceInfo)
+REG(InitVrSimulator)
+REG(CloseVrSimulator)
+REG(IsVrSimulatorReady)
+REG(SetVrDistortionShader)
+REG(UpdateVrTracking)
+REG(ToggleVrMode)
+REG(BeginVrDrawing)
+REG(EndVrDrawing)
+REG(InitAudioDevice)
+REG(CloseAudioDevice)
+REG(IsAudioDeviceReady)
+REG(SetMasterVolume)
+REG(LoadWave)
+REG(LoadWaveEx)
+REG(LoadSound)
+REG(LoadSoundFromWave)
+REG(UpdateSound)
+REG(UnloadWave)
+REG(UnloadSound)
+REG(PlaySound)
+REG(PauseSound)
+REG(ResumeSound)
+REG(StopSound)
+REG(IsSoundPlaying)
+REG(SetSoundVolume)
+REG(SetSoundPitch)
+REG(WaveFormat)
+REG(WaveCopy)
+REG(WaveCrop)
+REG(GetWaveData)
+REG(LoadMusicStream)
+REG(UnloadMusicStream)
+REG(PlayMusicStream)
+REG(UpdateMusicStream)
+REG(StopMusicStream)
+REG(PauseMusicStream)
+REG(ResumeMusicStream)
+REG(IsMusicPlaying)
+REG(SetMusicVolume)
+REG(SetMusicPitch)
+REG(SetMusicLoopCount)
+REG(GetMusicTimeLength)
+REG(GetMusicTimePlayed)
+REG(InitAudioStream)
+REG(UpdateAudioStream)
+REG(CloseAudioStream)
+REG(IsAudioBufferProcessed)
+REG(PlayAudioStream)
+REG(PauseAudioStream)
+REG(ResumeAudioStream)
+REG(IsAudioStreamPlaying)
+REG(StopAudioStream)
+REG(SetAudioStreamVolume)
+REG(SetAudioStreamPitch)
+
+    { NULL, NULL }  // sentinel: end signal
+};
