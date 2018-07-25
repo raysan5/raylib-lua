@@ -224,13 +224,13 @@ int main()
                 for (int i = 0; i < paramsCount; i++)
                 {
                     // TODO: Consider different types (LUA_TNUMBER, LUA_TTABLE)
-                    fprintf(rluaFile, "    luaL_argcheck(L, lua_getfield(L, index, ""%s"") == LUA_TNUMBER, index, \"Expected %s.%s\");\n", paramNames[i], typeName, paramNames[i]);
+                    fprintf(rluaFile, "    luaL_argcheck(L, lua_getfield(L, index, \"%s\") == LUA_TNUMBER, index, \"Expected %s.%s\");\n", paramNames[i], typeName, paramNames[i]);
                     
                     // TODO: Consider different data types (lua_tonumber, LuaGetArgument_Vector3)
                     fprintf(rluaFile, "    result.%s = LuaGetArgument_%s(L, -1);\n", paramNames[i], paramTypes[i]);
                 }
                 fprintf(rluaFile, "    lua_pop(L, %i);\n", paramsCount);
-                fprintf(rluaFile, "    return result;}\n\n");
+                fprintf(rluaFile, "    return result;\n}\n\n");
             
                 // Generate LuaPush functions
                 // NOTE: LuaPush functions are written in a separate string buffer, that will be written to file at the end

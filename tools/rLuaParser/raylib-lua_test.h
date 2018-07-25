@@ -1,69 +1,246 @@
 //----------------------------------------------------------------------------------
 // Structures Definition
 //----------------------------------------------------------------------------------
+// Vector2 type
+static Vector2 LuaGetArgument_Vector2(lua_State *L, int index)
+{
+    Vector2 result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "x") == LUA_TNUMBER, index, "Expected Vector2.x");
+    result.x = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "y") == LUA_TNUMBER, index, "Expected Vector2.y");
+    result.y = LuaGetArgument_float(L, -1);
+    lua_pop(L, 2);
+    return result;
+}
+
 // Vector3 type
 static Vector3 LuaGetArgument_Vector3(lua_State *L, int index)
 {
     Vector3 result = { 0 };
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-    luaL_argcheck(L, lua_getfield(L, index, x) == LUA_TNUMBER, index, "Expected Vector3.x");
+    luaL_argcheck(L, lua_getfield(L, index, "x") == LUA_TNUMBER, index, "Expected Vector3.x");
     result.x = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, y) == LUA_TNUMBER, index, "Expected Vector3.y");
+    luaL_argcheck(L, lua_getfield(L, index, "y") == LUA_TNUMBER, index, "Expected Vector3.y");
     result.y = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, z) == LUA_TNUMBER, index, "Expected Vector3.z");
+    luaL_argcheck(L, lua_getfield(L, index, "z") == LUA_TNUMBER, index, "Expected Vector3.z");
     result.z = LuaGetArgument_float(L, -1);
     lua_pop(L, 3);
-    return result;}
+    return result;
+}
 
-// Trace log type
-LuaStartEnum();
-LuaSetEnum("LOG_INFO", LOG_INFO);
-LuaSetEnum("LOG_WARNING", LOG_WARNING);
-LuaSetEnum("LOG_ERROR", LOG_ERROR);
-LuaSetEnum("LOG_DEBUG", LOG_DEBUG);
-LuaSetEnum("LOG_OTHER", LOG_OTHER);
-LuaEndEnum("name");
+// Vector4 type
+static Vector4 LuaGetArgument_Vector4(lua_State *L, int index)
+{
+    Vector4 result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "x") == LUA_TNUMBER, index, "Expected Vector4.x");
+    result.x = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "y") == LUA_TNUMBER, index, "Expected Vector4.y");
+    result.y = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "z") == LUA_TNUMBER, index, "Expected Vector4.z");
+    result.z = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "w") == LUA_TNUMBER, index, "Expected Vector4.w");
+    result.w = LuaGetArgument_float(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Quaternion type, same as Vector4
+// Matrix type (OpenGL style 4x4 - right handed, column major)
+static Matrix LuaGetArgument_Matrix(lua_State *L, int index)
+{
+    Matrix result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "m0, m4, m8, m12") == LUA_TNUMBER, index, "Expected Matrix.m0, m4, m8, m12");
+    result.m0, m4, m8, m12 = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "m1, m5, m9, m13") == LUA_TNUMBER, index, "Expected Matrix.m1, m5, m9, m13");
+    result.m1, m5, m9, m13 = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "m2, m6, m10, m14") == LUA_TNUMBER, index, "Expected Matrix.m2, m6, m10, m14");
+    result.m2, m6, m10, m14 = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "m3, m7, m11, m15") == LUA_TNUMBER, index, "Expected Matrix.m3, m7, m11, m15");
+    result.m3, m7, m11, m15 = LuaGetArgument_float(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Color type, RGBA (32bit)
+static Color LuaGetArgument_Color(lua_State *L, int index)
+{
+    Color result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "char r") == LUA_TNUMBER, index, "Expected Color.char r");
+    result.char r = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "char g") == LUA_TNUMBER, index, "Expected Color.char g");
+    result.char g = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "char b") == LUA_TNUMBER, index, "Expected Color.char b");
+    result.char b = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "char a") == LUA_TNUMBER, index, "Expected Color.char a");
+    result.char a = LuaGetArgument_unsigned(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Rectangle type
+static Rectangle LuaGetArgument_Rectangle(lua_State *L, int index)
+{
+    Rectangle result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "x") == LUA_TNUMBER, index, "Expected Rectangle.x");
+    result.x = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "y") == LUA_TNUMBER, index, "Expected Rectangle.y");
+    result.y = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "width") == LUA_TNUMBER, index, "Expected Rectangle.width");
+    result.width = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "height") == LUA_TNUMBER, index, "Expected Rectangle.height");
+    result.height = LuaGetArgument_float(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Image type, bpp always RGBA (32bit)
+// NOTE: Data stored in CPU memory (RAM)
+static Image LuaGetArgument_Image(lua_State *L, int index)
+{
+    Image result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "*data") == LUA_TNUMBER, index, "Expected Image.*data");
+    result.*data = LuaGetArgument_void(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "width") == LUA_TNUMBER, index, "Expected Image.width");
+    result.width = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "height") == LUA_TNUMBER, index, "Expected Image.height");
+    result.height = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "mipmaps") == LUA_TNUMBER, index, "Expected Image.mipmaps");
+    result.mipmaps = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "format") == LUA_TNUMBER, index, "Expected Image.format");
+    result.format = LuaGetArgument_int(L, -1);
+    lua_pop(L, 5);
+    return result;
+}
+
+// Texture2D type
+// NOTE: Data stored in GPU memory
+static Texture2D LuaGetArgument_Texture2D(lua_State *L, int index)
+{
+    Texture2D result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "int id") == LUA_TNUMBER, index, "Expected Texture2D.int id");
+    result.int id = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "width") == LUA_TNUMBER, index, "Expected Texture2D.width");
+    result.width = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "height") == LUA_TNUMBER, index, "Expected Texture2D.height");
+    result.height = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "mipmaps") == LUA_TNUMBER, index, "Expected Texture2D.mipmaps");
+    result.mipmaps = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "format") == LUA_TNUMBER, index, "Expected Texture2D.format");
+    result.format = LuaGetArgument_int(L, -1);
+    lua_pop(L, 5);
+    return result;
+}
+
+// Texture type, same as Texture2D
 // RenderTexture2D type, for texture rendering
 static RenderTexture2D LuaGetArgument_RenderTexture2D(lua_State *L, int index)
 {
     RenderTexture2D result = { 0 };
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-    luaL_argcheck(L, lua_getfield(L, index, int id) == LUA_TNUMBER, index, "Expected RenderTexture2D.int id");
+    luaL_argcheck(L, lua_getfield(L, index, "int id") == LUA_TNUMBER, index, "Expected RenderTexture2D.int id");
     result.int id = LuaGetArgument_unsigned(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, texture) == LUA_TNUMBER, index, "Expected RenderTexture2D.texture");
+    luaL_argcheck(L, lua_getfield(L, index, "texture") == LUA_TNUMBER, index, "Expected RenderTexture2D.texture");
     result.texture = LuaGetArgument_Texture2D(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, depth) == LUA_TNUMBER, index, "Expected RenderTexture2D.depth");
+    luaL_argcheck(L, lua_getfield(L, index, "depth") == LUA_TNUMBER, index, "Expected RenderTexture2D.depth");
     result.depth = LuaGetArgument_Texture2D(L, -1);
     lua_pop(L, 3);
-    return result;}
+    return result;
+}
 
-// SpriteFont type, includes texture and charSet array data
-static SpriteFont LuaGetArgument_SpriteFont(lua_State *L, int index)
+// RenderTexture type, same as RenderTexture2D
+// Font character info
+static CharInfo LuaGetArgument_CharInfo(lua_State *L, int index)
 {
-    SpriteFont result = { 0 };
+    CharInfo result = { 0 };
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-    luaL_argcheck(L, lua_getfield(L, index, texture) == LUA_TNUMBER, index, "Expected SpriteFont.texture");
+    luaL_argcheck(L, lua_getfield(L, index, "value") == LUA_TNUMBER, index, "Expected CharInfo.value");
+    result.value = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "rec") == LUA_TNUMBER, index, "Expected CharInfo.rec");
+    result.rec = LuaGetArgument_Rectangle(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "offsetX") == LUA_TNUMBER, index, "Expected CharInfo.offsetX");
+    result.offsetX = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "offsetY") == LUA_TNUMBER, index, "Expected CharInfo.offsetY");
+    result.offsetY = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "advanceX") == LUA_TNUMBER, index, "Expected CharInfo.advanceX");
+    result.advanceX = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "char *data") == LUA_TNUMBER, index, "Expected CharInfo.char *data");
+    result.char *data = LuaGetArgument_unsigned(L, -1);
+    lua_pop(L, 6);
+    return result;
+}
+
+// Font type, includes texture and charSet array data
+static Font LuaGetArgument_Font(lua_State *L, int index)
+{
+    Font result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "texture") == LUA_TNUMBER, index, "Expected Font.texture");
     result.texture = LuaGetArgument_Texture2D(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, baseSize) == LUA_TNUMBER, index, "Expected SpriteFont.baseSize");
+    luaL_argcheck(L, lua_getfield(L, index, "baseSize") == LUA_TNUMBER, index, "Expected Font.baseSize");
     result.baseSize = LuaGetArgument_int(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, charsCount) == LUA_TNUMBER, index, "Expected SpriteFont.charsCount");
+    luaL_argcheck(L, lua_getfield(L, index, "charsCount") == LUA_TNUMBER, index, "Expected Font.charsCount");
     result.charsCount = LuaGetArgument_int(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *chars) == LUA_TNUMBER, index, "Expected SpriteFont.*chars");
+    luaL_argcheck(L, lua_getfield(L, index, "*chars") == LUA_TNUMBER, index, "Expected Font.*chars");
     result.*chars = LuaGetArgument_CharInfo(L, -1);
     lua_pop(L, 4);
-    return result;}
+    return result;
+}
+
+// Camera type, defines a camera position/orientation in 3d space
+static Camera3D LuaGetArgument_Camera3D(lua_State *L, int index)
+{
+    Camera3D result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "position") == LUA_TNUMBER, index, "Expected Camera3D.position");
+    result.position = LuaGetArgument_Vector3(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "target") == LUA_TNUMBER, index, "Expected Camera3D.target");
+    result.target = LuaGetArgument_Vector3(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "up") == LUA_TNUMBER, index, "Expected Camera3D.up");
+    result.up = LuaGetArgument_Vector3(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "fovy") == LUA_TNUMBER, index, "Expected Camera3D.fovy");
+    result.fovy = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "type") == LUA_TNUMBER, index, "Expected Camera3D.type");
+    result.type = LuaGetArgument_int(L, -1);
+    lua_pop(L, 5);
+    return result;
+}
+
+// Camera2D type, defines a 2d camera
+static Camera2D LuaGetArgument_Camera2D(lua_State *L, int index)
+{
+    Camera2D result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "offset") == LUA_TNUMBER, index, "Expected Camera2D.offset");
+    result.offset = LuaGetArgument_Vector2(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "target") == LUA_TNUMBER, index, "Expected Camera2D.target");
+    result.target = LuaGetArgument_Vector2(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "rotation") == LUA_TNUMBER, index, "Expected Camera2D.rotation");
+    result.rotation = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "zoom") == LUA_TNUMBER, index, "Expected Camera2D.zoom");
+    result.zoom = LuaGetArgument_float(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
 
 // Bounding box type
 static BoundingBox LuaGetArgument_BoundingBox(lua_State *L, int index)
 {
     BoundingBox result = { 0 };
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-    luaL_argcheck(L, lua_getfield(L, index, min) == LUA_TNUMBER, index, "Expected BoundingBox.min");
+    luaL_argcheck(L, lua_getfield(L, index, "min") == LUA_TNUMBER, index, "Expected BoundingBox.min");
     result.min = LuaGetArgument_Vector3(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, max) == LUA_TNUMBER, index, "Expected BoundingBox.max");
+    luaL_argcheck(L, lua_getfield(L, index, "max") == LUA_TNUMBER, index, "Expected BoundingBox.max");
     result.max = LuaGetArgument_Vector3(L, -1);
     lua_pop(L, 2);
-    return result;}
+    return result;
+}
 
 // Vertex data definning a mesh
 // NOTE: Data stored in CPU memory (and GPU)
@@ -71,30 +248,223 @@ static Mesh LuaGetArgument_Mesh(lua_State *L, int index)
 {
     Mesh result = { 0 };
     index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
-    luaL_argcheck(L, lua_getfield(L, index, vertexCount) == LUA_TNUMBER, index, "Expected Mesh.vertexCount");
+    luaL_argcheck(L, lua_getfield(L, index, "vertexCount") == LUA_TNUMBER, index, "Expected Mesh.vertexCount");
     result.vertexCount = LuaGetArgument_int(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, triangleCount) == LUA_TNUMBER, index, "Expected Mesh.triangleCount");
+    luaL_argcheck(L, lua_getfield(L, index, "triangleCount") == LUA_TNUMBER, index, "Expected Mesh.triangleCount");
     result.triangleCount = LuaGetArgument_int(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *vertices) == LUA_TNUMBER, index, "Expected Mesh.*vertices");
+    luaL_argcheck(L, lua_getfield(L, index, "*vertices") == LUA_TNUMBER, index, "Expected Mesh.*vertices");
     result.*vertices = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *texcoords) == LUA_TNUMBER, index, "Expected Mesh.*texcoords");
+    luaL_argcheck(L, lua_getfield(L, index, "*texcoords") == LUA_TNUMBER, index, "Expected Mesh.*texcoords");
     result.*texcoords = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *texcoords2) == LUA_TNUMBER, index, "Expected Mesh.*texcoords2");
+    luaL_argcheck(L, lua_getfield(L, index, "*texcoords2") == LUA_TNUMBER, index, "Expected Mesh.*texcoords2");
     result.*texcoords2 = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *normals) == LUA_TNUMBER, index, "Expected Mesh.*normals");
+    luaL_argcheck(L, lua_getfield(L, index, "*normals") == LUA_TNUMBER, index, "Expected Mesh.*normals");
     result.*normals = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, *tangents) == LUA_TNUMBER, index, "Expected Mesh.*tangents");
+    luaL_argcheck(L, lua_getfield(L, index, "*tangents") == LUA_TNUMBER, index, "Expected Mesh.*tangents");
     result.*tangents = LuaGetArgument_float(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, char *colors) == LUA_TNUMBER, index, "Expected Mesh.char *colors");
+    luaL_argcheck(L, lua_getfield(L, index, "char *colors") == LUA_TNUMBER, index, "Expected Mesh.char *colors");
     result.char *colors = LuaGetArgument_unsigned(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, short *indices) == LUA_TNUMBER, index, "Expected Mesh.short *indices");
+    luaL_argcheck(L, lua_getfield(L, index, "short *indices") == LUA_TNUMBER, index, "Expected Mesh.short *indices");
     result.short *indices = LuaGetArgument_unsigned(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, int vaoId) == LUA_TNUMBER, index, "Expected Mesh.int vaoId");
+    luaL_argcheck(L, lua_getfield(L, index, "int vaoId") == LUA_TNUMBER, index, "Expected Mesh.int vaoId");
     result.int vaoId = LuaGetArgument_unsigned(L, -1);
-    luaL_argcheck(L, lua_getfield(L, index, int vboId[7]) == LUA_TNUMBER, index, "Expected Mesh.int vboId[7]");
+    luaL_argcheck(L, lua_getfield(L, index, "int vboId[7]") == LUA_TNUMBER, index, "Expected Mesh.int vboId[7]");
     result.int vboId[7] = LuaGetArgument_unsigned(L, -1);
     lua_pop(L, 11);
-    return result;}
+    return result;
+}
+
+// Shader type (generic)
+static Shader LuaGetArgument_Shader(lua_State *L, int index)
+{
+    Shader result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "int id") == LUA_TNUMBER, index, "Expected Shader.int id");
+    result.int id = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "locs[MAX_SHADER_LOCATIONS]") == LUA_TNUMBER, index, "Expected Shader.locs[MAX_SHADER_LOCATIONS]");
+    result.locs[MAX_SHADER_LOCATIONS] = LuaGetArgument_int(L, -1);
+    lua_pop(L, 2);
+    return result;
+}
+
+// Material texture map
+static MaterialMap LuaGetArgument_MaterialMap(lua_State *L, int index)
+{
+    MaterialMap result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "texture") == LUA_TNUMBER, index, "Expected MaterialMap.texture");
+    result.texture = LuaGetArgument_Texture2D(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "color") == LUA_TNUMBER, index, "Expected MaterialMap.color");
+    result.color = LuaGetArgument_Color(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "value") == LUA_TNUMBER, index, "Expected MaterialMap.value");
+    result.value = LuaGetArgument_float(L, -1);
+    lua_pop(L, 3);
+    return result;
+}
+
+// Material type (generic)
+static Material LuaGetArgument_Material(lua_State *L, int index)
+{
+    Material result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "shader") == LUA_TNUMBER, index, "Expected Material.shader");
+    result.shader = LuaGetArgument_Shader(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "maps[MAX_MATERIAL_MAPS]") == LUA_TNUMBER, index, "Expected Material.maps[MAX_MATERIAL_MAPS]");
+    result.maps[MAX_MATERIAL_MAPS] = LuaGetArgument_MaterialMap(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "*params") == LUA_TNUMBER, index, "Expected Material.*params");
+    result.*params = LuaGetArgument_float(L, -1);
+    lua_pop(L, 3);
+    return result;
+}
+
+// Model type
+static Model LuaGetArgument_Model(lua_State *L, int index)
+{
+    Model result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "mesh") == LUA_TNUMBER, index, "Expected Model.mesh");
+    result.mesh = LuaGetArgument_Mesh(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "transform") == LUA_TNUMBER, index, "Expected Model.transform");
+    result.transform = LuaGetArgument_Matrix(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "material") == LUA_TNUMBER, index, "Expected Model.material");
+    result.material = LuaGetArgument_Material(L, -1);
+    lua_pop(L, 3);
+    return result;
+}
+
+// Ray type (useful for raycast)
+static Ray LuaGetArgument_Ray(lua_State *L, int index)
+{
+    Ray result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "position") == LUA_TNUMBER, index, "Expected Ray.position");
+    result.position = LuaGetArgument_Vector3(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "direction") == LUA_TNUMBER, index, "Expected Ray.direction");
+    result.direction = LuaGetArgument_Vector3(L, -1);
+    lua_pop(L, 2);
+    return result;
+}
+
+// Raycast hit information
+static RayHitInfo LuaGetArgument_RayHitInfo(lua_State *L, int index)
+{
+    RayHitInfo result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "hit") == LUA_TNUMBER, index, "Expected RayHitInfo.hit");
+    result.hit = LuaGetArgument_bool(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "distance") == LUA_TNUMBER, index, "Expected RayHitInfo.distance");
+    result.distance = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "position") == LUA_TNUMBER, index, "Expected RayHitInfo.position");
+    result.position = LuaGetArgument_Vector3(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "normal") == LUA_TNUMBER, index, "Expected RayHitInfo.normal");
+    result.normal = LuaGetArgument_Vector3(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Wave type, defines audio wave data
+static Wave LuaGetArgument_Wave(lua_State *L, int index)
+{
+    Wave result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "int sampleCount") == LUA_TNUMBER, index, "Expected Wave.int sampleCount");
+    result.int sampleCount = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int sampleRate") == LUA_TNUMBER, index, "Expected Wave.int sampleRate");
+    result.int sampleRate = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int sampleSize") == LUA_TNUMBER, index, "Expected Wave.int sampleSize");
+    result.int sampleSize = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int channels") == LUA_TNUMBER, index, "Expected Wave.int channels");
+    result.int channels = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "*data") == LUA_TNUMBER, index, "Expected Wave.*data");
+    result.*data = LuaGetArgument_void(L, -1);
+    lua_pop(L, 5);
+    return result;
+}
+
+// Sound source type
+static Sound LuaGetArgument_Sound(lua_State *L, int index)
+{
+    Sound result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "*audioBuffer") == LUA_TNUMBER, index, "Expected Sound.*audioBuffer");
+    result.*audioBuffer = LuaGetArgument_void(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int source") == LUA_TNUMBER, index, "Expected Sound.int source");
+    result.int source = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int buffer") == LUA_TNUMBER, index, "Expected Sound.int buffer");
+    result.int buffer = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "format") == LUA_TNUMBER, index, "Expected Sound.format");
+    result.format = LuaGetArgument_int(L, -1);
+    lua_pop(L, 4);
+    return result;
+}
+
+// Music type (file streaming from memory)
+// NOTE: Anything longer than ~10 seconds should be streamed
+static MusicData LuaGetArgument_MusicData(lua_State *L, int index)
+{
+    MusicData result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "Audio stream type
+") == LUA_TNUMBER, index, "Expected MusicData.Audio stream type
+");
+    result.Audio stream type
+ = LuaGetArgument_//(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "NOTE: Useful to create custom austruct AudioStream {
+") == LUA_TNUMBER, index, "Expected MusicData.NOTE: Useful to create custom austruct AudioStream {
+");
+    result.NOTE: Useful to create custom austruct AudioStream {
+ = LuaGetArgument_//(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "struct AudioStream {
+") == LUA_TNUMBER, index, "Expected MusicData.struct AudioStream {
+");
+    result.struct AudioStream {
+ = LuaGetArgument_typedef(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int sampleRate") == LUA_TNUMBER, index, "Expected MusicData.int sampleRate");
+    result.int sampleRate = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int sampleSize") == LUA_TNUMBER, index, "Expected MusicData.int sampleSize");
+    result.int sampleSize = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int channels") == LUA_TNUMBER, index, "Expected MusicData.int channels");
+    result.int channels = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "*audioBuffer") == LUA_TNUMBER, index, "Expected MusicData.*audioBuffer");
+    result.*audioBuffer = LuaGetArgument_void(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "format") == LUA_TNUMBER, index, "Expected MusicData.format");
+    result.format = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int source") == LUA_TNUMBER, index, "Expected MusicData.int source");
+    result.int source = LuaGetArgument_unsigned(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "int buffers[2]") == LUA_TNUMBER, index, "Expected MusicData.int buffers[2]");
+    result.int buffers[2] = LuaGetArgument_unsigned(L, -1);
+    lua_pop(L, 10);
+    return result;
+}
+
+// Head-Mounted-Display device parameters
+static VrDeviceInfo LuaGetArgument_VrDeviceInfo(lua_State *L, int index)
+{
+    VrDeviceInfo result = { 0 };
+    index = lua_absindex(L, index); // Makes sure we use absolute indices because we push multiple values
+    luaL_argcheck(L, lua_getfield(L, index, "hResolution") == LUA_TNUMBER, index, "Expected VrDeviceInfo.hResolution");
+    result.hResolution = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "vResolution") == LUA_TNUMBER, index, "Expected VrDeviceInfo.vResolution");
+    result.vResolution = LuaGetArgument_int(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "hScreenSize") == LUA_TNUMBER, index, "Expected VrDeviceInfo.hScreenSize");
+    result.hScreenSize = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "vScreenSize") == LUA_TNUMBER, index, "Expected VrDeviceInfo.vScreenSize");
+    result.vScreenSize = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "vScreenCenter") == LUA_TNUMBER, index, "Expected VrDeviceInfo.vScreenCenter");
+    result.vScreenCenter = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "eyeToScreenDistance") == LUA_TNUMBER, index, "Expected VrDeviceInfo.eyeToScreenDistance");
+    result.eyeToScreenDistance = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "lensSeparationDistance") == LUA_TNUMBER, index, "Expected VrDeviceInfo.lensSeparationDistance");
+    result.lensSeparationDistance = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "interpupillaryDistance") == LUA_TNUMBER, index, "Expected VrDeviceInfo.interpupillaryDistance");
+    result.interpupillaryDistance = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "lensDistortionValues[4]") == LUA_TNUMBER, index, "Expected VrDeviceInfo.lensDistortionValues[4]");
+    result.lensDistortionValues[4] = LuaGetArgument_float(L, -1);
+    luaL_argcheck(L, lua_getfield(L, index, "chromaAbCorrection[4]") == LUA_TNUMBER, index, "Expected VrDeviceInfo.chromaAbCorrection[4]");
+    result.chromaAbCorrection[4] = LuaGetArgument_float(L, -1);
+    lua_pop(L, 10);
+    return result;
+}
 
 //------------------------------------------------------------------------------------
 // Global Variables Definition
@@ -280,32 +650,32 @@ int lua_EndDrawing(lua_State *L)
 }
 
 // Initialize 2D mode with custom camera (2D)
-int lua_Begin2dMode(lua_State *L)
+int lua_BeginMode2D(lua_State *L)
 {
     Camera2D camera = LuaGetArgument_Camera2D(L, 1);
-    Begin2dMode(camera);
+    BeginMode2D(camera);
     return 0;
 }
 
 // Ends 2D mode with custom camera
-int lua_End2dMode(lua_State *L)
+int lua_EndMode2D(lua_State *L)
 {
-    End2dMode();
+    EndMode2D();
     return 0;
 }
 
 // Initializes 3D mode with custom camera (3D)
-int lua_Begin3dMode(lua_State *L)
+int lua_BeginMode3D(lua_State *L)
 {
-    Camera camera = LuaGetArgument_Camera(L, 1);
-    Begin3dMode(camera);
+    Camera3D camera = LuaGetArgument_Camera3D(L, 1);
+    BeginMode3D(camera);
     return 0;
 }
 
 // Ends 3D mode and returns to default 2D orthographic mode
-int lua_End3dMode(lua_State *L)
+int lua_EndMode3D(lua_State *L)
 {
-    End3dMode();
+    EndMode3D();
     return 0;
 }
 
@@ -388,21 +758,21 @@ int lua_GetTime(lua_State *L)
 }
 
 // Color-related functions
-// Returns normalized float array for a Color
-int lua_ColorToFloat(lua_State *L)
-{
-    Color color = LuaGetArgument_Color(L, 1);
-    float result = ColorToFloat(color);
-    LuaPush_float(L, result);
-    return 1;
-}
-
 // Returns hexadecimal value for a Color
 int lua_ColorToInt(lua_State *L)
 {
     Color color = LuaGetArgument_Color(L, 1);
     int result = ColorToInt(color);
     LuaPush_int(L, result);
+    return 1;
+}
+
+// Returns color normalized as float [0..1]
+int lua_ColorNormalize(lua_State *L)
+{
+    Color color = LuaGetArgument_Color(L, 1);
+    Vector4 result = ColorNormalize(color);
+    LuaPush_Vector4(L, result);
     return 1;
 }
 
@@ -457,6 +827,7 @@ int lua_SetTraceLog(lua_State *L)
     SetTraceLog(types);
     return 0;
 }
+
 
 // Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
 int lua_TraceLog(lua_State *L)
@@ -650,7 +1021,7 @@ int lua_IsGamepadAvailable(lua_State *L)
     return 1;
 }
 
-// Check gamepad name (if available)
+// WARNING: Check gamepad name (if available)
 int lua_IsGamepadName(lua_State *L)
 {
     int gamepad = LuaGetArgument_int(L, 1);
@@ -1439,6 +1810,15 @@ int lua_GetImageData(lua_State *L)
     return 1;
 }
 
+// Get pixel data from image as Vector4 array (float normalized)
+int lua_GetImageDataNormalized(lua_State *L)
+{
+    Image image = LuaGetArgument_Image(L, 1);
+    Vector4 result = GetImageDataNormalized(image);
+    LuaPush_Vector4(L, result);
+    return 1;
+}
+
 // Get pixel data size in bytes (image or texture)
 int lua_GetPixelDataSize(lua_State *L)
 {
@@ -1541,7 +1921,7 @@ int lua_ImageCrop(lua_State *L)
     return 0;
 }
 
-// Resize and image (bilinear filtering)
+// Resize image (bilinear filtering)
 int lua_ImageResize(lua_State *L)
 {
     Image image = LuaGetArgument_Image(L, 1);
@@ -1551,13 +1931,26 @@ int lua_ImageResize(lua_State *L)
     return 0;
 }
 
-// Resize and image (Nearest-Neighbor scaling algorithm)
+// Resize image (Nearest-Neighbor scaling algorithm)
 int lua_ImageResizeNN(lua_State *L)
 {
     Image image = LuaGetArgument_Image(L, 1);
     int newWidth = LuaGetArgument_int(L, 2);
     int newHeight = LuaGetArgument_int(L, 3);
     ImageResizeNN(image, newWidth, newHeight);
+    return 0;
+}
+
+// Resize canvas and fill with color
+int lua_ImageResizeCanvas(lua_State *L)
+{
+    Image image = LuaGetArgument_Image(L, 1);
+    int newWidth = LuaGetArgument_int(L, 2);
+    int newHeight = LuaGetArgument_int(L, 3);
+    int offsetX = LuaGetArgument_int(L, 4);
+    int offsetY = LuaGetArgument_int(L, 5);
+    Color color = LuaGetArgument_Color(L, 6);
+    ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, color);
     return 0;
 }
 
@@ -1595,10 +1988,10 @@ int lua_ImageText(lua_State *L)
 // Create an image from text (custom sprite font)
 int lua_ImageTextEx(lua_State *L)
 {
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
+    Font font = LuaGetArgument_Font(L, 1);
     const char text = LuaGetArgument_string(L, 2);
     float fontSize = LuaGetArgument_float(L, 3);
-    int spacing = LuaGetArgument_int(L, 4);
+    float spacing = LuaGetArgument_float(L, 4);
     Color tint = LuaGetArgument_Color(L, 5);
     Image result = ImageTextEx(font, text, fontSize, spacing, tint);
     LuaPush_Image(L, result);
@@ -1644,10 +2037,10 @@ int lua_ImageDrawTextEx(lua_State *L)
 {
     Image dst = LuaGetArgument_Image(L, 1);
     Vector2 position = LuaGetArgument_Vector2(L, 2);
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 3);
+    Font font = LuaGetArgument_Font(L, 3);
     const char text = LuaGetArgument_string(L, 4);
     float fontSize = LuaGetArgument_float(L, 5);
-    int spacing = LuaGetArgument_int(L, 6);
+    float spacing = LuaGetArgument_float(L, 6);
     Color color = LuaGetArgument_Color(L, 7);
     ImageDrawTextEx(dst, position, font, text, fontSize, spacing, color);
     return 0;
@@ -1666,6 +2059,22 @@ int lua_ImageFlipHorizontal(lua_State *L)
 {
     Image image = LuaGetArgument_Image(L, 1);
     ImageFlipHorizontal(image);
+    return 0;
+}
+
+// Rotate image clockwise 90deg
+int lua_ImageRotateCW(lua_State *L)
+{
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageRotateCW(image);
+    return 0;
+}
+
+// Rotate image counter-clockwise 90deg
+int lua_ImageRotateCCW(lua_State *L)
+{
+    Image image = LuaGetArgument_Image(L, 1);
+    ImageRotateCCW(image);
     return 0;
 }
 
@@ -1709,6 +2118,16 @@ int lua_ImageColorBrightness(lua_State *L)
     Image image = LuaGetArgument_Image(L, 1);
     int brightness = LuaGetArgument_int(L, 2);
     ImageColorBrightness(image, brightness);
+    return 0;
+}
+
+// Modify image color: replace color
+int lua_ImageColorReplace(lua_State *L)
+{
+    Image image = LuaGetArgument_Image(L, 1);
+    Color color = LuaGetArgument_Color(L, 2);
+    Color replace = LuaGetArgument_Color(L, 3);
+    ImageColorReplace(image, color, replace);
     return 0;
 }
 
@@ -1898,41 +2317,67 @@ int lua_DrawTexturePro(lua_State *L)
 //------------------------------------------------------------------------------------
 // Font Loading and Text Drawing Functions (Module: text)
 //------------------------------------------------------------------------------------
-// SpriteFont loading/unloading functions
-// Get the default SpriteFont
-int lua_GetDefaultFont(lua_State *L)
+// Font loading/unloading functions
+// Get the default Font
+int lua_GetFontDefault(lua_State *L)
 {
-    SpriteFont result = GetDefaultFont();
-    LuaPush_SpriteFont(L, result);
+    Font result = GetFontDefault();
+    LuaPush_Font(L, result);
     return 1;
 }
 
-// Load SpriteFont from file into GPU memory (VRAM)
-int lua_LoadSpriteFont(lua_State *L)
+// Load font from file into GPU memory (VRAM)
+int lua_LoadFont(lua_State *L)
 {
     const char fileName = LuaGetArgument_string(L, 1);
-    SpriteFont result = LoadSpriteFont(fileName);
-    LuaPush_SpriteFont(L, result);
+    Font result = LoadFont(fileName);
+    LuaPush_Font(L, result);
     return 1;
 }
 
-// Load SpriteFont from file with extended parameters
-int lua_LoadSpriteFontEx(lua_State *L)
+// Load font from file with extended parameters
+int lua_LoadFontEx(lua_State *L)
 {
     const char fileName = LuaGetArgument_string(L, 1);
     int fontSize = LuaGetArgument_int(L, 2);
     int charsCount = LuaGetArgument_int(L, 3);
     int fontChars = LuaGetArgument_int(L, 4);
-    SpriteFont result = LoadSpriteFontEx(fileName, fontSize, charsCount, fontChars);
-    LuaPush_SpriteFont(L, result);
+    Font result = LoadFontEx(fileName, fontSize, charsCount, fontChars);
+    LuaPush_Font(L, result);
     return 1;
 }
 
-// Unload SpriteFont from GPU memory (VRAM)
-int lua_UnloadSpriteFont(lua_State *L)
+// Load font data for further use
+int lua_LoadFontData(lua_State *L)
 {
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
-    UnloadSpriteFont(font);
+    const char fileName = LuaGetArgument_string(L, 1);
+    int fontSize = LuaGetArgument_int(L, 2);
+    int fontChars = LuaGetArgument_int(L, 3);
+    int charsCount = LuaGetArgument_int(L, 4);
+    bool sdf = LuaGetArgument_bool(L, 5);
+    CharInfo result = LoadFontData(fileName, fontSize, fontChars, charsCount, sdf);
+    LuaPush_CharInfo(L, result);
+    return 1;
+}
+
+// Generate image font atlas using chars info
+int lua_GenImageFontAtlas(lua_State *L)
+{
+    CharInfo chars = LuaGetArgument_CharInfo(L, 1);
+    int fontSize = LuaGetArgument_int(L, 2);
+    int charsCount = LuaGetArgument_int(L, 3);
+    int padding = LuaGetArgument_int(L, 4);
+    int packMethod = LuaGetArgument_int(L, 5);
+    Image result = GenImageFontAtlas(chars, fontSize, charsCount, padding, packMethod);
+    LuaPush_Image(L, result);
+    return 1;
+}
+
+// Unload Font from GPU memory (VRAM)
+int lua_UnloadFont(lua_State *L)
+{
+    Font font = LuaGetArgument_Font(L, 1);
+    UnloadFont(font);
     return 0;
 }
 
@@ -1958,14 +2403,14 @@ int lua_DrawText(lua_State *L)
     return 0;
 }
 
-// Draw text using SpriteFont and additional parameters
+// Draw text using font and additional parameters
 int lua_DrawTextEx(lua_State *L)
 {
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
+    Font font = LuaGetArgument_Font(L, 1);
     const char* text = LuaGetArgument_char*(L, 2);
     Vector2 position = LuaGetArgument_Vector2(L, 3);
     float fontSize = LuaGetArgument_float(L, 4);
-    int spacing = LuaGetArgument_int(L, 5);
+    float spacing = LuaGetArgument_float(L, 5);
     Color tint = LuaGetArgument_Color(L, 6);
     DrawTextEx(font, text, position, fontSize, spacing, tint);
     return 0;
@@ -1982,13 +2427,13 @@ int lua_MeasureText(lua_State *L)
     return 1;
 }
 
-// Measure string size for SpriteFont
+// Measure string size for Font
 int lua_MeasureTextEx(lua_State *L)
 {
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
+    Font font = LuaGetArgument_Font(L, 1);
     const char text = LuaGetArgument_string(L, 2);
     float fontSize = LuaGetArgument_float(L, 3);
-    int spacing = LuaGetArgument_int(L, 4);
+    float spacing = LuaGetArgument_float(L, 4);
     Vector2 result = MeasureTextEx(font, text, fontSize, spacing);
     LuaPush_Vector2(L, result);
     return 1;
@@ -2015,10 +2460,10 @@ int lua_SubText(lua_State *L)
     return 1;
 }
 
-// Returns index position for a unicode character on sprite font
+// Get index position for a unicode character on font
 int lua_GetGlyphIndex(lua_State *L)
 {
-    SpriteFont font = LuaGetArgument_SpriteFont(L, 1);
+    Font font = LuaGetArgument_Font(L, 1);
     int character = LuaGetArgument_int(L, 2);
     int result = GetGlyphIndex(font, character);
     LuaPush_int(L, result);
@@ -2262,7 +2707,7 @@ int lua_MeshBoundingBox(lua_State *L)
     return 1;
 }
 
-// Compute mesh tangents 
+// Compute mesh tangents
 int lua_MeshTangents(lua_State *L)
 {
     Mesh mesh = LuaGetArgument_Mesh(L, 1);
@@ -3265,6 +3710,15 @@ int lua_SetAudioStreamPitch(lua_State *L)
     return 0;
 }
 
+static void LuaPush_Vector2(lua_State* L, Vector2 obj)
+{
+    lua_createtable(L, 0, 2);
+    LuaPush_float(L, obj.x);
+    lua_setfield(L, -2, "x");
+    LuaPush_float(L, obj.y);
+    lua_setfield(L, -2, "y");
+}
+
 static void LuaPush_Vector3(lua_State* L, Vector3 obj)
 {
     lua_createtable(L, 0, 3);
@@ -3274,6 +3728,88 @@ static void LuaPush_Vector3(lua_State* L, Vector3 obj)
     lua_setfield(L, -2, "y");
     LuaPush_float(L, obj.z);
     lua_setfield(L, -2, "z");
+}
+
+static void LuaPush_Vector4(lua_State* L, Vector4 obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_float(L, obj.x);
+    lua_setfield(L, -2, "x");
+    LuaPush_float(L, obj.y);
+    lua_setfield(L, -2, "y");
+    LuaPush_float(L, obj.z);
+    lua_setfield(L, -2, "z");
+    LuaPush_float(L, obj.w);
+    lua_setfield(L, -2, "w");
+}
+
+static void LuaPush_Matrix(lua_State* L, Matrix obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_float(L, obj.m0, m4, m8, m12);
+    lua_setfield(L, -2, "m0, m4, m8, m12");
+    LuaPush_float(L, obj.m1, m5, m9, m13);
+    lua_setfield(L, -2, "m1, m5, m9, m13");
+    LuaPush_float(L, obj.m2, m6, m10, m14);
+    lua_setfield(L, -2, "m2, m6, m10, m14");
+    LuaPush_float(L, obj.m3, m7, m11, m15);
+    lua_setfield(L, -2, "m3, m7, m11, m15");
+}
+
+static void LuaPush_Color(lua_State* L, Color obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_unsigned(L, obj.char r);
+    lua_setfield(L, -2, "char r");
+    LuaPush_unsigned(L, obj.char g);
+    lua_setfield(L, -2, "char g");
+    LuaPush_unsigned(L, obj.char b);
+    lua_setfield(L, -2, "char b");
+    LuaPush_unsigned(L, obj.char a);
+    lua_setfield(L, -2, "char a");
+}
+
+static void LuaPush_Rectangle(lua_State* L, Rectangle obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_float(L, obj.x);
+    lua_setfield(L, -2, "x");
+    LuaPush_float(L, obj.y);
+    lua_setfield(L, -2, "y");
+    LuaPush_float(L, obj.width);
+    lua_setfield(L, -2, "width");
+    LuaPush_float(L, obj.height);
+    lua_setfield(L, -2, "height");
+}
+
+static void LuaPush_Image(lua_State* L, Image obj)
+{
+    lua_createtable(L, 0, 5);
+    LuaPush_void(L, obj.data);
+    lua_setfield(L, -2, "*data");
+    LuaPush_int(L, obj.width);
+    lua_setfield(L, -2, "width");
+    LuaPush_int(L, obj.height);
+    lua_setfield(L, -2, "height");
+    LuaPush_int(L, obj.mipmaps);
+    lua_setfield(L, -2, "mipmaps");
+    LuaPush_int(L, obj.format);
+    lua_setfield(L, -2, "format");
+}
+
+static void LuaPush_Texture2D(lua_State* L, Texture2D obj)
+{
+    lua_createtable(L, 0, 5);
+    LuaPush_unsigned(L, obj.int id);
+    lua_setfield(L, -2, "int id");
+    LuaPush_int(L, obj.width);
+    lua_setfield(L, -2, "width");
+    LuaPush_int(L, obj.height);
+    lua_setfield(L, -2, "height");
+    LuaPush_int(L, obj.mipmaps);
+    lua_setfield(L, -2, "mipmaps");
+    LuaPush_int(L, obj.format);
+    lua_setfield(L, -2, "format");
 }
 
 static void LuaPush_RenderTexture2D(lua_State* L, RenderTexture2D obj)
@@ -3287,7 +3823,24 @@ static void LuaPush_RenderTexture2D(lua_State* L, RenderTexture2D obj)
     lua_setfield(L, -2, "depth");
 }
 
-static void LuaPush_SpriteFont(lua_State* L, SpriteFont obj)
+static void LuaPush_CharInfo(lua_State* L, CharInfo obj)
+{
+    lua_createtable(L, 0, 6);
+    LuaPush_int(L, obj.value);
+    lua_setfield(L, -2, "value");
+    LuaPush_Rectangle(L, obj.rec);
+    lua_setfield(L, -2, "rec");
+    LuaPush_int(L, obj.offsetX);
+    lua_setfield(L, -2, "offsetX");
+    LuaPush_int(L, obj.offsetY);
+    lua_setfield(L, -2, "offsetY");
+    LuaPush_int(L, obj.advanceX);
+    lua_setfield(L, -2, "advanceX");
+    LuaPush_unsigned(L, obj.char *data);
+    lua_setfield(L, -2, "char *data");
+}
+
+static void LuaPush_Font(lua_State* L, Font obj)
 {
     lua_createtable(L, 0, 4);
     LuaPush_Texture2D(L, obj.texture);
@@ -3298,6 +3851,34 @@ static void LuaPush_SpriteFont(lua_State* L, SpriteFont obj)
     lua_setfield(L, -2, "charsCount");
     LuaPush_CharInfo(L, obj.chars);
     lua_setfield(L, -2, "*chars");
+}
+
+static void LuaPush_Camera3D(lua_State* L, Camera3D obj)
+{
+    lua_createtable(L, 0, 5);
+    LuaPush_Vector3(L, obj.position);
+    lua_setfield(L, -2, "position");
+    LuaPush_Vector3(L, obj.target);
+    lua_setfield(L, -2, "target");
+    LuaPush_Vector3(L, obj.up);
+    lua_setfield(L, -2, "up");
+    LuaPush_float(L, obj.fovy);
+    lua_setfield(L, -2, "fovy");
+    LuaPush_int(L, obj.type);
+    lua_setfield(L, -2, "type");
+}
+
+static void LuaPush_Camera2D(lua_State* L, Camera2D obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_Vector2(L, obj.offset);
+    lua_setfield(L, -2, "offset");
+    LuaPush_Vector2(L, obj.target);
+    lua_setfield(L, -2, "target");
+    LuaPush_float(L, obj.rotation);
+    lua_setfield(L, -2, "rotation");
+    LuaPush_float(L, obj.zoom);
+    lua_setfield(L, -2, "zoom");
 }
 
 static void LuaPush_BoundingBox(lua_State* L, BoundingBox obj)
@@ -3336,6 +3917,154 @@ static void LuaPush_Mesh(lua_State* L, Mesh obj)
     lua_setfield(L, -2, "int vboId[7]");
 }
 
+static void LuaPush_Shader(lua_State* L, Shader obj)
+{
+    lua_createtable(L, 0, 2);
+    LuaPush_unsigned(L, obj.int id);
+    lua_setfield(L, -2, "int id");
+    LuaPush_int(L, obj.locs[MAX_SHADER_LOCATIONS]);
+    lua_setfield(L, -2, "locs[MAX_SHADER_LOCATIONS]");
+}
+
+static void LuaPush_MaterialMap(lua_State* L, MaterialMap obj)
+{
+    lua_createtable(L, 0, 3);
+    LuaPush_Texture2D(L, obj.texture);
+    lua_setfield(L, -2, "texture");
+    LuaPush_Color(L, obj.color);
+    lua_setfield(L, -2, "color");
+    LuaPush_float(L, obj.value);
+    lua_setfield(L, -2, "value");
+}
+
+static void LuaPush_Material(lua_State* L, Material obj)
+{
+    lua_createtable(L, 0, 3);
+    LuaPush_Shader(L, obj.shader);
+    lua_setfield(L, -2, "shader");
+    LuaPush_MaterialMap(L, obj.maps[MAX_MATERIAL_MAPS]);
+    lua_setfield(L, -2, "maps[MAX_MATERIAL_MAPS]");
+    LuaPush_float(L, obj.params);
+    lua_setfield(L, -2, "*params");
+}
+
+static void LuaPush_Model(lua_State* L, Model obj)
+{
+    lua_createtable(L, 0, 3);
+    LuaPush_Mesh(L, obj.mesh);
+    lua_setfield(L, -2, "mesh");
+    LuaPush_Matrix(L, obj.transform);
+    lua_setfield(L, -2, "transform");
+    LuaPush_Material(L, obj.material);
+    lua_setfield(L, -2, "material");
+}
+
+static void LuaPush_Ray(lua_State* L, Ray obj)
+{
+    lua_createtable(L, 0, 2);
+    LuaPush_Vector3(L, obj.position);
+    lua_setfield(L, -2, "position");
+    LuaPush_Vector3(L, obj.direction);
+    lua_setfield(L, -2, "direction");
+}
+
+static void LuaPush_RayHitInfo(lua_State* L, RayHitInfo obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_bool(L, obj.hit);
+    lua_setfield(L, -2, "hit");
+    LuaPush_float(L, obj.distance);
+    lua_setfield(L, -2, "distance");
+    LuaPush_Vector3(L, obj.position);
+    lua_setfield(L, -2, "position");
+    LuaPush_Vector3(L, obj.normal);
+    lua_setfield(L, -2, "normal");
+}
+
+static void LuaPush_Wave(lua_State* L, Wave obj)
+{
+    lua_createtable(L, 0, 5);
+    LuaPush_unsigned(L, obj.int sampleCount);
+    lua_setfield(L, -2, "int sampleCount");
+    LuaPush_unsigned(L, obj.int sampleRate);
+    lua_setfield(L, -2, "int sampleRate");
+    LuaPush_unsigned(L, obj.int sampleSize);
+    lua_setfield(L, -2, "int sampleSize");
+    LuaPush_unsigned(L, obj.int channels);
+    lua_setfield(L, -2, "int channels");
+    LuaPush_void(L, obj.data);
+    lua_setfield(L, -2, "*data");
+}
+
+static void LuaPush_Sound(lua_State* L, Sound obj)
+{
+    lua_createtable(L, 0, 4);
+    LuaPush_void(L, obj.audioBuffer);
+    lua_setfield(L, -2, "*audioBuffer");
+    LuaPush_unsigned(L, obj.int source);
+    lua_setfield(L, -2, "int source");
+    LuaPush_unsigned(L, obj.int buffer);
+    lua_setfield(L, -2, "int buffer");
+    LuaPush_int(L, obj.format);
+    lua_setfield(L, -2, "format");
+}
+
+static void LuaPush_MusicData(lua_State* L, MusicData obj)
+{
+    lua_createtable(L, 0, 10);
+    LuaPush_//(L, obj.Audio stream type
+);
+    lua_setfield(L, -2, "Audio stream type
+");
+    LuaPush_//(L, obj.NOTE: Useful to create custom austruct AudioStream {
+);
+    lua_setfield(L, -2, "NOTE: Useful to create custom austruct AudioStream {
+");
+    LuaPush_typedef(L, obj.struct AudioStream {
+);
+    lua_setfield(L, -2, "struct AudioStream {
+");
+    LuaPush_unsigned(L, obj.int sampleRate);
+    lua_setfield(L, -2, "int sampleRate");
+    LuaPush_unsigned(L, obj.int sampleSize);
+    lua_setfield(L, -2, "int sampleSize");
+    LuaPush_unsigned(L, obj.int channels);
+    lua_setfield(L, -2, "int channels");
+    LuaPush_void(L, obj.audioBuffer);
+    lua_setfield(L, -2, "*audioBuffer");
+    LuaPush_int(L, obj.format);
+    lua_setfield(L, -2, "format");
+    LuaPush_unsigned(L, obj.int source);
+    lua_setfield(L, -2, "int source");
+    LuaPush_unsigned(L, obj.int buffers[2]);
+    lua_setfield(L, -2, "int buffers[2]");
+}
+
+static void LuaPush_VrDeviceInfo(lua_State* L, VrDeviceInfo obj)
+{
+    lua_createtable(L, 0, 10);
+    LuaPush_int(L, obj.hResolution);
+    lua_setfield(L, -2, "hResolution");
+    LuaPush_int(L, obj.vResolution);
+    lua_setfield(L, -2, "vResolution");
+    LuaPush_float(L, obj.hScreenSize);
+    lua_setfield(L, -2, "hScreenSize");
+    LuaPush_float(L, obj.vScreenSize);
+    lua_setfield(L, -2, "vScreenSize");
+    LuaPush_float(L, obj.vScreenCenter);
+    lua_setfield(L, -2, "vScreenCenter");
+    LuaPush_float(L, obj.eyeToScreenDistance);
+    lua_setfield(L, -2, "eyeToScreenDistance");
+    LuaPush_float(L, obj.lensSeparationDistance);
+    lua_setfield(L, -2, "lensSeparationDistance");
+    LuaPush_float(L, obj.interpupillaryDistance);
+    lua_setfield(L, -2, "interpupillaryDistance");
+    LuaPush_float(L, obj.lensDistortionValues[4]);
+    lua_setfield(L, -2, "lensDistortionValues[4]");
+    LuaPush_float(L, obj.chromaAbCorrection[4]);
+    lua_setfield(L, -2, "chromaAbCorrection[4]");
+}
+
 // raylib Functions (and data types) list
 static luaL_Reg raylib_functions[] = {
 REG(InitWindow)
@@ -3360,10 +4089,10 @@ REG(DisableCursor)
 REG(ClearBackground)
 REG(BeginDrawing)
 REG(EndDrawing)
-REG(Begin2dMode)
-REG(End2dMode)
-REG(Begin3dMode)
-REG(End3dMode)
+REG(BeginMode2D)
+REG(EndMode2D)
+REG(BeginMode3D)
+REG(EndMode3D)
 REG(BeginTextureMode)
 REG(EndTextureMode)
 REG(GetMouseRay)
@@ -3373,8 +4102,8 @@ REG(SetTargetFPS)
 REG(GetFPS)
 REG(GetFrameTime)
 REG(GetTime)
-REG(ColorToFloat)
 REG(ColorToInt)
+REG(ColorNormalize)
 REG(ColorToHSV)
 REG(GetColor)
 REG(Fade)
@@ -3482,6 +4211,7 @@ REG(UnloadImage)
 REG(UnloadTexture)
 REG(UnloadRenderTexture)
 REG(GetImageData)
+REG(GetImageDataNormalized)
 REG(GetPixelDataSize)
 REG(GetTextureData)
 REG(UpdateTexture)
@@ -3495,6 +4225,7 @@ REG(ImageAlphaPremultiply)
 REG(ImageCrop)
 REG(ImageResize)
 REG(ImageResizeNN)
+REG(ImageResizeCanvas)
 REG(ImageMipmaps)
 REG(ImageDither)
 REG(ImageText)
@@ -3505,11 +4236,14 @@ REG(ImageDrawText)
 REG(ImageDrawTextEx)
 REG(ImageFlipVertical)
 REG(ImageFlipHorizontal)
+REG(ImageRotateCW)
+REG(ImageRotateCCW)
 REG(ImageColorTint)
 REG(ImageColorInvert)
 REG(ImageColorGrayscale)
 REG(ImageColorContrast)
 REG(ImageColorBrightness)
+REG(ImageColorReplace)
 REG(GenImageColor)
 REG(GenImageGradientV)
 REG(GenImageGradientH)
@@ -3526,10 +4260,12 @@ REG(DrawTextureV)
 REG(DrawTextureEx)
 REG(DrawTextureRec)
 REG(DrawTexturePro)
-REG(GetDefaultFont)
-REG(LoadSpriteFont)
-REG(LoadSpriteFontEx)
-REG(UnloadSpriteFont)
+REG(GetFontDefault)
+REG(LoadFont)
+REG(LoadFontEx)
+REG(LoadFontData)
+REG(GenImageFontAtlas)
+REG(UnloadFont)
 REG(DrawFPS)
 REG(DrawText)
 REG(DrawTextEx)
