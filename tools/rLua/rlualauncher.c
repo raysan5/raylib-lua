@@ -1,27 +1,26 @@
 /*******************************************************************************************
 *
-*   rlua v1.0 - raylib Lua launcher
+*   rLuaLauncher v1.1 - raylib Lua Launcher
 *
 *   DEPENDENCIES:
 *
-*   raylib 1.7 - This program uses latest raylib version (www.raylib.com)
+*   raylib 2.0 - This program uses latest raylib version (www.raylib.com)
 *   Lua 5.3.3  - http://luabinaries.sourceforge.net/download.html
 *
-*   COMPILATION (MinGW 5.3.0):
+*   COMPILATION (GCC):
 *
-*   gcc -o rlua.exe rlua.c -s rlua_icon -I. -Iexternal/lua/include -Lexternal/lua/lib  \
-*       -lraylib -lglfw3 -lopengl32 -lgdi32 -lopenal32 -lwinmm -llua53                 \
-*       -std=c99 -Wl,-allow-multiple-definition -Wl,--subsystem,windows
+*   gcc -o rlualauncher.exe rlualauncher.c -s rlualauncher.rc.o -I. -Iexternal/lua/include \
+*       -Lexternal/lua/lib -lraylib -lopengl32 -lgdi32 -llua53 -std=c99 -Wall -Wl,--subsystem,windows
 *
 *   USAGE:
 *
-*   Just launch your raylib .lua file from command line:    rlua.exe core_basic_window.lua
-*   or drag&drop your .lua file over rlua.exe
+*   Just launch your raylib .lua file from command line:    rll.exe core_basic_window.lua
+*   or drag&drop your .lua file over rll.exe
 *
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2016-2017 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2016-2018 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -56,9 +55,9 @@ int main(int argc, char *argv[])
         
         if (IsFileExtension(argv[1], ".lua"))
         {
-            InitLuaDevice();            // Initialize lua device
-            ExecuteLuaFile(argv[1]);    // Execute lua program (argument file)
-            CloseLuaDevice();           // Close Lua device and free resources
+            rLuaInitDevice();            // Initialize lua device
+            rLuaExecuteFile(argv[1]);    // Execute lua program (argument file)
+            rLuaCloseDevice();           // Close Lua device and free resources
         }
     }
     else
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
             int screenWidth = 800;
             int screenHeight = 450;
 
-            InitWindow(screenWidth, screenHeight, "rLua - raylib Lua launcher");
+            InitWindow(screenWidth, screenHeight, "rLL - raylib Lua Launcher");
             
             // NOTE: Drag and drop support only available for desktop platforms: Windows, Linux, OSX
             int count = 0;
@@ -114,8 +113,8 @@ int main(int argc, char *argv[])
                 
                     ClearBackground(RAYWHITE);
                     
-                    DrawText("rLua - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
-                    DrawText("rLua v1.0", 10, 430, 10, GRAY);
+                    DrawText("rLL - raylib Lua launcher", 10, 10, 20, LIGHTGRAY);
+                    DrawText("rLL v1.1", 10, 430, 10, GRAY);
                     DrawText("< drag & drop raylib Lua file here >", 230, 180, 20, GRAY);
                 
                 EndDrawing();
@@ -137,10 +136,10 @@ int main(int argc, char *argv[])
                 TraceLog(INFO, "Loading Lua file: %s", luaFileToLoad);
                 TraceLog(INFO, "------------------------------------");
                 
-                InitLuaDevice();                // Initialize lua device
+                rLuaInitDevice();                // Initialize lua device
                 ChangeDirectory(GetDirectoryPath(luaFileToLoad));
-                ExecuteLuaFile(luaFileToLoad);
-                CloseLuaDevice();               // Close Lua device and free resources
+                rLuaExecuteFile(luaFileToLoad);
+                rLuaCloseDevice();               // Close Lua device and free resources
                 
                 launcherShouldClose = false;    // Return to launcher to load another Lua file
                 
