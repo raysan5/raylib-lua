@@ -183,7 +183,7 @@ int main()
             
             // Register function names REG() into luaREG string
             //--------------------------------------------------
-            len += sprintf(luaREGPtr + len, "REG(%s)\n", funcName);
+            len += sprintf(luaREGPtr + len, "    REG(%s)\n", funcName);
             luaREGPtr += len;
             
         }
