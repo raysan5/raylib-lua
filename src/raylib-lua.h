@@ -86,10 +86,10 @@
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
-RLUADEF void InitLuaDevice(void);                   // Initialize Lua system
-RLUADEF void ExecuteLuaCode(const char *code);      // Execute raylib Lua code
-RLUADEF void ExecuteLuaFile(const char *filename);  // Execute raylib Lua script
-RLUADEF void CloseLuaDevice(void);                  // De-initialize Lua system
+RLUADEF void rLuaInitDevice(void);                   // Initialize Lua system
+RLUADEF void rLuaExecuteCode(const char *code);      // Execute raylib Lua code
+RLUADEF void rLuaExecuteFile(const char *filename);  // Execute raylib Lua script
+RLUADEF void rLuaCloseDevice(void);                  // De-initialize Lua system
 
 /***********************************************************************************
 *
@@ -5001,13 +5001,13 @@ int lua_ClosePhysics(lua_State* L)
 //----------------------------------------------------------------------------------
 #define REG(name) { #name, lua_##name },
 
-// raylib Functions (and data types) list
 static luaL_Reg raylib_functions[] = {
 
     // Register non-opaque data types
     REG(Color)
     REG(Vector2)
     REG(Vector3)
+    REG(Vector4)
     //REG(Matrix)
     REG(Quaternion)
     REG(Rectangle)
@@ -5020,75 +5020,69 @@ static luaL_Reg raylib_functions[] = {
 
     // Register functions
     //--------------------
-    
-    // [core] module functions
     REG(InitWindow)
     REG(CloseWindow)
+    REG(IsWindowReady)
     REG(WindowShouldClose)
     REG(IsWindowMinimized)
     REG(ToggleFullscreen)
     REG(SetWindowIcon)
+    REG(SetWindowTitle)
     REG(SetWindowPosition)
     REG(SetWindowMonitor)
     REG(SetWindowMinSize)
-	REG(GetScreenWidth)
+    REG(SetWindowSize)
+    REG(GetScreenWidth)
     REG(GetScreenHeight)
-
     REG(ShowCursor)
     REG(HideCursor)
     REG(IsCursorHidden)
     REG(EnableCursor)
     REG(DisableCursor)
-
     REG(ClearBackground)
     REG(BeginDrawing)
     REG(EndDrawing)
-    REG(Begin2dMode)
-    REG(End2dMode)
-    REG(Begin3dMode)
-    REG(End3dMode)
+    REG(BeginMode2D)
+    REG(EndMode2D)
+    REG(BeginMode3D)
+    REG(EndMode3D)
     REG(BeginTextureMode)
     REG(EndTextureMode)
-
     REG(GetMouseRay)
     REG(GetWorldToScreen)
     REG(GetCameraMatrix)
-
-#if defined(PLATFORM_WEB)
-    REG(SetDrawingLoop)
-#else
     REG(SetTargetFPS)
-#endif
     REG(GetFPS)
     REG(GetFrameTime)
-
+    REG(GetTime)
+    REG(ColorToInt)
+    REG(ColorNormalize)
+    REG(ColorToHSV)
     REG(GetColor)
-    REG(GetHexValue)
-    REG(ColorToFloat)
-    REG(VectorToFloat)
-    REG(MatrixToFloat)
-    REG(GetRandomValue)
     REG(Fade)
-    
     REG(ShowLogo)
     REG(SetConfigFlags)
+    REG(SetTraceLog)
     REG(TraceLog)
     REG(TakeScreenshot)
+    REG(GetRandomValue)
     REG(IsFileExtension)
-
+    REG(GetExtension)
+    REG(GetFileName)
+    REG(GetDirectoryPath)
+    REG(GetWorkingDirectory)
+    REG(ChangeDirectory)
     REG(IsFileDropped)
     REG(GetDroppedFiles)
     REG(ClearDroppedFiles)
     REG(StorageSaveValue)
     REG(StorageLoadValue)
-
     REG(IsKeyPressed)
     REG(IsKeyDown)
     REG(IsKeyReleased)
     REG(IsKeyUp)
     REG(GetKeyPressed)
     REG(SetExitKey)
-
     REG(IsGamepadAvailable)
     REG(IsGamepadName)
     REG(GetGamepadName)
@@ -5099,7 +5093,6 @@ static luaL_Reg raylib_functions[] = {
     REG(GetGamepadButtonPressed)
     REG(GetGamepadAxisCount)
     REG(GetGamepadAxisMovement)
-
     REG(IsMouseButtonPressed)
     REG(IsMouseButtonDown)
     REG(IsMouseButtonReleased)
@@ -5108,13 +5101,11 @@ static luaL_Reg raylib_functions[] = {
     REG(GetMouseY)
     REG(GetMousePosition)
     REG(SetMousePosition)
+    REG(SetMouseScale)
     REG(GetMouseWheelMove)
-    
     REG(GetTouchX)
     REG(GetTouchY)
     REG(GetTouchPosition)
-
-    // [gestures] module functions
     REG(SetGesturesEnabled)
     REG(IsGestureDetected)
     REG(GetGestureDetected)
@@ -5124,16 +5115,12 @@ static luaL_Reg raylib_functions[] = {
     REG(GetGestureDragAngle)
     REG(GetGesturePinchVector)
     REG(GetGesturePinchAngle)
-
-    // [camera] module functions
     REG(SetCameraMode)
     REG(UpdateCamera)
     REG(SetCameraPanControl)
     REG(SetCameraAltControl)
     REG(SetCameraSmoothZoomControl)
     REG(SetCameraMoveControls)
-
-    // [shapes] module functions
     REG(DrawPixel)
     REG(DrawPixelV)
     REG(DrawLine)
@@ -5145,17 +5132,19 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawCircleV)
     REG(DrawCircleLines)
     REG(DrawRectangle)
+    REG(DrawRectangleV)
     REG(DrawRectangleRec)
     REG(DrawRectanglePro)
-    REG(DrawRectangleGradient)
-    REG(DrawRectangleV)
+    REG(DrawRectangleGradientV)
+    REG(DrawRectangleGradientH)
+    REG(DrawRectangleGradientEx)
     REG(DrawRectangleLines)
+    REG(DrawRectangleLinesEx)
     REG(DrawTriangle)
     REG(DrawTriangleLines)
     REG(DrawPoly)
     REG(DrawPolyEx)
     REG(DrawPolyExLines)
-
     REG(CheckCollisionRecs)
     REG(CheckCollisionCircles)
     REG(CheckCollisionCircleRec)
@@ -5163,12 +5152,11 @@ static luaL_Reg raylib_functions[] = {
     REG(CheckCollisionPointRec)
     REG(CheckCollisionPointCircle)
     REG(CheckCollisionPointTriangle)
-
-    // [textures] module functions
     REG(LoadImage)
     REG(LoadImageEx)
     REG(LoadImagePro)
     REG(LoadImageRaw)
+    REG(ExportImage)
     REG(LoadTexture)
     REG(LoadTextureFromImage)
     REG(LoadRenderTexture)
@@ -5176,50 +5164,69 @@ static luaL_Reg raylib_functions[] = {
     REG(UnloadTexture)
     REG(UnloadRenderTexture)
     REG(GetImageData)
+    REG(GetImageDataNormalized)
+    REG(GetPixelDataSize)
     REG(GetTextureData)
     REG(UpdateTexture)
+    REG(ImageCopy)
     REG(ImageToPOT)
     REG(ImageFormat)
     REG(ImageAlphaMask)
-    REG(ImageDither)
-    REG(ImageCopy)
+    REG(ImageAlphaClear)
+    REG(ImageAlphaCrop)
+    REG(ImageAlphaPremultiply)
     REG(ImageCrop)
     REG(ImageResize)
     REG(ImageResizeNN)
+    REG(ImageResizeCanvas)
+    REG(ImageMipmaps)
+    REG(ImageDither)
     REG(ImageText)
     REG(ImageTextEx)
     REG(ImageDraw)
+    REG(ImageDrawRectangle)
     REG(ImageDrawText)
     REG(ImageDrawTextEx)
     REG(ImageFlipVertical)
     REG(ImageFlipHorizontal)
+    REG(ImageRotateCW)
+    REG(ImageRotateCCW)
     REG(ImageColorTint)
     REG(ImageColorInvert)
     REG(ImageColorGrayscale)
     REG(ImageColorContrast)
     REG(ImageColorBrightness)
+    REG(ImageColorReplace)
+    REG(GenImageColor)
+    REG(GenImageGradientV)
+    REG(GenImageGradientH)
+    REG(GenImageGradientRadial)
+    REG(GenImageChecked)
+    REG(GenImageWhiteNoise)
+    REG(GenImagePerlinNoise)
+    REG(GenImageCellular)
     REG(GenTextureMipmaps)
     REG(SetTextureFilter)
     REG(SetTextureWrap)
-    
     REG(DrawTexture)
     REG(DrawTextureV)
     REG(DrawTextureEx)
     REG(DrawTextureRec)
     REG(DrawTexturePro)
-
-    // [text] module functions
-    REG(GetDefaultFont)
+    REG(GetFontDefault)
     REG(LoadFont)
     REG(LoadFontEx)
+    REG(LoadFontData)
+    REG(GenImageFontAtlas)
     REG(UnloadFont)
+    REG(DrawFPS)
     REG(DrawText)
     REG(DrawTextEx)
     REG(MeasureText)
     REG(MeasureTextEx)
-    REG(DrawFPS)
-
-    // [models] module functions
+    REG(FormatText)
+    REG(SubText)
+    REG(GetGlyphIndex)
     REG(DrawLine3D)
     REG(DrawCircle3D)
     REG(DrawCube)
@@ -5235,69 +5242,77 @@ static luaL_Reg raylib_functions[] = {
     REG(DrawRay)
     REG(DrawGrid)
     REG(DrawGizmo)
-
-    REG(LoadMesh)
-    REG(LoadMeshEx)
     REG(LoadModel)
     REG(LoadModelFromMesh)
-    REG(LoadHeightmap)
-    REG(LoadCubicmap)
-    REG(UnloadMesh)
     REG(UnloadModel)
-    
+    REG(LoadMesh)
+    REG(UnloadMesh)
+    REG(ExportMesh)
+    REG(MeshBoundingBox)
+    REG(MeshTangents)
+    REG(MeshBinormals)
+    REG(GenMeshPlane)
+    REG(GenMeshCube)
+    REG(GenMeshSphere)
+    REG(GenMeshHemiSphere)
+    REG(GenMeshCylinder)
+    REG(GenMeshTorus)
+    REG(GenMeshKnot)
+    REG(GenMeshHeightmap)
+    REG(GenMeshCubicmap)
     REG(LoadMaterial)
-    REG(LoadDefaultMaterial)
+    REG(LoadMaterialDefault)
     REG(UnloadMaterial)
-
     REG(DrawModel)
     REG(DrawModelEx)
     REG(DrawModelWires)
-    REG(DrawBoundingBox)
     REG(DrawModelWiresEx)
+    REG(DrawBoundingBox)
     REG(DrawBillboard)
     REG(DrawBillboardRec)
-    REG(CalculateBoundingBox)
     REG(CheckCollisionSpheres)
     REG(CheckCollisionBoxes)
     REG(CheckCollisionBoxSphere)
     REG(CheckCollisionRaySphere)
     REG(CheckCollisionRaySphereEx)
     REG(CheckCollisionRayBox)
-    REG(GetCollisionRayMesh)
+    REG(GetCollisionRayModel)
     REG(GetCollisionRayTriangle)
     REG(GetCollisionRayGround)
-
-    // [rlgl] module functions
     REG(LoadText)
     REG(LoadShader)
+    REG(LoadShaderCode)
     REG(UnloadShader)
-    REG(GetDefaultShader)
-    REG(GetDefaultTexture)
+    REG(GetShaderDefault)
+    REG(GetTextureDefault)
     REG(GetShaderLocation)
     REG(SetShaderValue)
     REG(SetShaderValuei)
     REG(SetShaderValueMatrix)
     REG(SetMatrixProjection)
     REG(SetMatrixModelview)
+    REG(GetMatrixModelview)
+    REG(GenTextureCubemap)
+    REG(GenTextureIrradiance)
+    REG(GenTexturePrefilter)
+    REG(GenTextureBRDF)
     REG(BeginShaderMode)
     REG(EndShaderMode)
     REG(BeginBlendMode)
     REG(EndBlendMode)
-
+    REG(GetVrDeviceInfo)
     REG(InitVrSimulator)
     REG(CloseVrSimulator)
     REG(IsVrSimulatorReady)
+    REG(SetVrDistortionShader)
     REG(UpdateVrTracking)
     REG(ToggleVrMode)
     REG(BeginVrDrawing)
     REG(EndVrDrawing)
-
-    // [audio] module functions
     REG(InitAudioDevice)
     REG(CloseAudioDevice)
     REG(IsAudioDeviceReady)
     REG(SetMasterVolume)
-
     REG(LoadWave)
     REG(LoadWaveEx)
     REG(LoadSound)
@@ -5316,11 +5331,10 @@ static luaL_Reg raylib_functions[] = {
     REG(WaveCopy)
     REG(WaveCrop)
     REG(GetWaveData)
-
     REG(LoadMusicStream)
     REG(UnloadMusicStream)
-    REG(UpdateMusicStream)
     REG(PlayMusicStream)
+    REG(UpdateMusicStream)
     REG(StopMusicStream)
     REG(PauseMusicStream)
     REG(ResumeMusicStream)
@@ -5330,7 +5344,6 @@ static luaL_Reg raylib_functions[] = {
     REG(SetMusicLoopCount)
     REG(GetMusicTimeLength)
     REG(GetMusicTimePlayed)
-
     REG(InitAudioStream)
     REG(UpdateAudioStream)
     REG(CloseAudioStream)
@@ -5338,8 +5351,12 @@ static luaL_Reg raylib_functions[] = {
     REG(PlayAudioStream)
     REG(PauseAudioStream)
     REG(ResumeAudioStream)
+    REG(IsAudioStreamPlaying)
     REG(StopAudioStream)
-
+    REG(SetAudioStreamVolume)
+    REG(SetAudioStreamPitch)
+    
+    
     // [raymath] module functions - general
     REG(Clamp)
     
@@ -5432,7 +5449,7 @@ static luaL_Reg raylib_functions[] = {
 };
 
 // Register raylib Lua functionality
-static void RegisterLuaFunctions(const char *opt_table)
+static void rLuaRegisterFunctions(const char *opt_table)
 {
     if (opt_table) lua_createtable(L, 0, sizeof(raylib_functions)/sizeof(raylib_functions[0]));
     else lua_pushglobaltable(L);
@@ -5445,7 +5462,7 @@ static void RegisterLuaFunctions(const char *opt_table)
 //----------------------------------------------------------------------------------
 
 // Initialize Lua system
-RLUADEF void InitLuaDevice(void)
+RLUADEF void rLuaInitDevice(void)
 {
     mainLuaState = luaL_newstate();
     L = mainLuaState;
@@ -5709,11 +5726,11 @@ RLUADEF void InitLuaDevice(void)
     luaL_openlibs(L);
     LuaBuildOpaqueMetatables();
 
-    RegisterLuaFunctions(0);        // Register Lua raylib functions
+    rLuaRegisterFunctions(0);        // Register Lua raylib functions
 }
 
 // De-initialize Lua system
-RLUADEF void CloseLuaDevice(void)
+RLUADEF void rLuaCloseDevice(void)
 {
     if (mainLuaState)
     {
@@ -5724,7 +5741,7 @@ RLUADEF void CloseLuaDevice(void)
 }
 
 // Execute raylib Lua code
-RLUADEF void ExecuteLuaCode(const char *code)
+RLUADEF void rLuaExecuteCode(const char *code)
 {
     if (!mainLuaState)
     {
@@ -5744,7 +5761,7 @@ RLUADEF void ExecuteLuaCode(const char *code)
 }
 
 // Execute raylib Lua script
-RLUADEF void ExecuteLuaFile(const char *filename)
+RLUADEF void rLuaExecuteFile(const char *filename)
 {
     if (!mainLuaState)
     {
