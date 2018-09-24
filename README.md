@@ -2,7 +2,7 @@
 
 # raylib-lua
 
-Lua bindings for raylib, a simple and easy-to-use library to learn videogames programming (www.raylib.com)
+Lua bindings for raylib, a simple and easy-to-use library to enjoy videogames programming (www.raylib.com)
 
 raylib-lua binding is self-contained in a header-only single file: [raylib-lua.h](src/raylib-lua.h). Just include that file
 in your project to allow loading and execution of raylib code written in Lua. Check [code examples](examples) for reference.
