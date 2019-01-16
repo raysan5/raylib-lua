@@ -9,7 +9,7 @@ raylib-lua could be useful for prototyping, tools development, graphic applicati
 
 <br><br>
 
-**WARNING: raylib-lua is very outdated! It's based on raylib 1.7 and it's being ported to raylib 2.0. Nor ready yet, sorry. In an effort to automatize binding generation I created [rLuaParser](https://github.com/raysan5/raylib-lua/tree/master/tools/rLuaParser), neither finished due to several side cases, specially related to opaque data types. Any help or contribution is welcome!**
+**WARNING: Current raylib-lua binding is outdated! It's based on raylib 1.7 and it's being ported to raylib 2.x. Not ready yet, sorry.**
 
 ### rLuaLauncher
 
@@ -21,7 +21,7 @@ For more details, just check comments on sources.
 
 ### rLuaParser
 
-A raylib parser is on development to automatically generate raylib-lua binding, unfortunately there are several side cases that are not solved yet on the parsing, specially when dealing with opaque data types.
+In an effort to automatize raylib-lua binding generation I created [rLuaParser](https://github.com/raysan5/raylib-lua/tree/master/tools/rLuaParser), unfortunately there are several side cases that are not solved yet on the parsing, specially when dealing with opaque data types. Any help or contribution is welcome!
 
 # License
 
