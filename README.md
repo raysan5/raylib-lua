@@ -7,7 +7,7 @@ in your project to allow loading and execution of raylib code written in Lua. Ch
 
 raylib-lua could be useful for prototyping, tools development, graphic applications, embedded systems and education.
 
-<br>
+<br><br>
 
 **WARNING: raylib-lua is very outdated! It's based on raylib 1.7 and it's being ported to raylib 2.0. Nor ready yet, sorry. In an effort to automatize binding generation I created [rLuaParser](https://github.com/raysan5/raylib-lua/tree/master/tools/rLuaParser), neither finished due to several side cases, specially related to opaque data types. Any help or contribution is welcome!**
 
