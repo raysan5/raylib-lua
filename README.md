@@ -9,7 +9,8 @@ raylib-lua could be useful for prototyping, tools development, graphic applicati
 
 <br><br>
 
-**WARNING: Current raylib-lua binding is outdated! It's based on raylib 1.7 and it's being ported to raylib 2.x. Not ready yet, sorry.**
+**WARNING: Current raylib-lua binding is very outdated! It's based on raylib 1.7 and port to newer raylib versions is stopped. Consider switching to [raylib-lua-sol](https://github.com/RobLoach/raylib-lua-sol), updated to latest raylib 2.6.**
+
 
 ### rLuaLauncher
 
